@@ -133,7 +133,7 @@ export function transliterate(input: string): string {
     i++;
   }
 
-  return out;
+  return out.normalize('NFC');
 }
 
 /**
