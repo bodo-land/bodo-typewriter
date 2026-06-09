@@ -31,7 +31,7 @@ const s = {
     backgroundColor: GH.canvasDefault,
     color: GH.fgDefault,
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif",
-    fontSize: '14px',
+    fontSize: '16px',
     lineHeight: '1.5',
   } as React.CSSProperties,
 
@@ -62,7 +62,7 @@ const s = {
     borderRadius: '6px',
     color: GH.fgDefault,
     fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
-    fontSize: '14px',
+    fontSize: '16px',
     lineHeight: '1.6',
     padding: '12px',
     resize: 'vertical',
@@ -77,7 +77,7 @@ const s = {
     borderRadius: '6px',
     color: GH.fgDefault,
     fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-    fontSize: '20px',
+    fontSize: '24px',
     lineHeight: '1.8',
     padding: '12px',
     minHeight: '80px',
@@ -91,9 +91,9 @@ const s = {
     color: '#ffffff',
     cursor: 'pointer',
     fontFamily: 'inherit',
-    fontSize: '14px',
+    fontSize: '15px',
     fontWeight: 500,
-    padding: '5px 16px',
+    padding: '6px 16px',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
@@ -109,9 +109,9 @@ const s = {
     color: GH.fgDefault,
     cursor: 'pointer',
     fontFamily: 'inherit',
-    fontSize: '14px',
+    fontSize: '15px',
     fontWeight: 500,
-    padding: '5px 16px',
+    padding: '6px 16px',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
@@ -126,9 +126,9 @@ const s = {
     color: GH.dangerFg,
     cursor: 'pointer',
     fontFamily: 'inherit',
-    fontSize: '14px',
+    fontSize: '15px',
     fontWeight: 500,
-    padding: '5px 16px',
+    padding: '6px 16px',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
@@ -141,8 +141,8 @@ const s = {
     alignItems: 'center',
     gap: '4px',
     padding: '0 8px',
-    height: '20px',
-    fontSize: '12px',
+    height: '22px',
+    fontSize: '13px',
     fontWeight: 500,
     borderRadius: '20px',
     color,
@@ -159,11 +159,11 @@ const s = {
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    fontSize: '12px',
+    fontSize: '14px',
   } as React.CSSProperties,
 
   th: {
-    padding: '6px 10px',
+    padding: '8px 12px',
     textAlign: 'left',
     color: GH.fgMuted,
     fontWeight: 600,
@@ -174,14 +174,14 @@ const s = {
   } as React.CSSProperties,
 
   td: {
-    padding: '6px 10px',
+    padding: '8px 12px',
     borderBottom: `1px solid ${GH.borderMuted}`,
     verticalAlign: 'top',
   } as React.CSSProperties,
 
   code: {
     fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
-    fontSize: '11px',
+    fontSize: '13px',
     backgroundColor: GH.canvasDefault,
     border: `1px solid ${GH.borderMuted}`,
     borderRadius: '3px',
@@ -190,7 +190,7 @@ const s = {
   } as React.CSSProperties,
 
   sectionLabel: {
-    fontSize: '12px',
+    fontSize: '13px',
     fontWeight: 600,
     color: GH.fgMuted,
     textTransform: 'uppercase',
@@ -200,7 +200,7 @@ const s = {
   } as React.CSSProperties,
 
   h2: {
-    fontSize: '16px',
+    fontSize: '18px',
     fontWeight: 600,
     color: GH.fgDefault,
     margin: 0,
@@ -451,7 +451,7 @@ function RefTable({ rows }: { rows: { keys: string[]; output: string; label: str
             <td style={{
               ...s.td,
               fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: '15px',
+              fontSize: '18px',
               color: GH.accentFg,
             }}>
               {row.output}
@@ -478,7 +478,7 @@ function Header({ imeActive, onToggleIme }: { imeActive: boolean; onToggleIme: (
         }}>
           ब
         </span>
-        <span style={{ fontWeight: 600, fontSize: '14px' }}>Bodo Typewriter</span>
+        <span style={{ fontWeight: 600, fontSize: '16px' }}>Bodo Typewriter</span>
         <span style={s.label(GH.fgSubtle, 'transparent', GH.borderMuted)}>v1.0</span>
       </div>
 
@@ -486,12 +486,12 @@ function Header({ imeActive, onToggleIme }: { imeActive: boolean; onToggleIme: (
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <StatusDot active={imeActive} />
-        <span style={{ fontSize: '12px', color: GH.fgMuted }}>
+        <span style={{ fontSize: '14px', color: GH.fgMuted }}>
           IME {imeActive ? 'enabled' : 'disabled'}
         </span>
         <Btn variant="secondary" onClick={onToggleIme} title="Toggle transliteration (F9)">
           <IcoKeyboard />
-          <span style={{ fontSize: '11px', color: GH.fgSubtle, marginLeft: '2px' }}>F9</span>
+          <span style={{ fontSize: '13px', color: GH.fgSubtle, marginLeft: '2px' }}>F9</span>
         </Btn>
       </div>
     </header>
@@ -548,7 +548,7 @@ function EditorPanel({ imeActive }: { imeActive: boolean }) {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            fontSize: '12px',
+            fontSize: '14px',
             color: GH.fgMuted,
           }}>
             <span>Composing</span>
@@ -556,7 +556,7 @@ function EditorPanel({ imeActive }: { imeActive: boolean }) {
             <span style={{ color: GH.fgSubtle }}>→</span>
             <span style={{
               fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: '14px',
+              fontSize: '18px',
               color: GH.accentFg,
             }}>
               {/* Show only the in-progress portion */}
@@ -572,7 +572,7 @@ function EditorPanel({ imeActive }: { imeActive: boolean }) {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            fontSize: '12px',
+            fontSize: '14px',
             color: GH.attentionFg,
           }}>
             <span>⚠</span>
@@ -613,7 +613,7 @@ function EditorPanel({ imeActive }: { imeActive: boolean }) {
       <div style={{
         display: 'flex',
         gap: '16px',
-        fontSize: '12px',
+        fontSize: '13px',
         color: GH.fgSubtle,
         flexWrap: 'wrap',
         paddingTop: '4px',
@@ -656,7 +656,7 @@ function ReferencePanel() {
       <div style={{ overflowY: 'auto', maxHeight: '520px' }}>
         {tab === 'vowels' && (
           <>
-            <p style={{ margin: '10px 0 8px', fontSize: '12px', color: GH.fgMuted }}>
+            <p style={{ margin: '10px 0 8px', fontSize: '14px', color: GH.fgMuted }}>
               <Key k="o" /> is the inherent vowel (अ). After a consonant it emits no mātrā sign —
               the consonant's inherent /a/ is implied.
             </p>
@@ -665,7 +665,7 @@ function ReferencePanel() {
         )}
         {tab === 'consonants' && (
           <>
-            <p style={{ margin: '10px 0 8px', fontSize: '12px', color: GH.fgMuted }}>
+            <p style={{ margin: '10px 0 8px', fontSize: '14px', color: GH.fgMuted }}>
               Bodo uses an <strong style={{ color: GH.fgDefault }}>aspirated-first</strong> system —
               <Key k="k" /> → ख (aspirated), not क. Note: capital <Key k="I" /> = य, <Key k="O" /> = व.
             </p>
@@ -674,7 +674,7 @@ function ReferencePanel() {
         )}
         {tab === 'special' && (
           <>
-            <p style={{ margin: '10px 0 8px', fontSize: '12px', color: GH.fgMuted }}>
+            <p style={{ margin: '10px 0 8px', fontSize: '14px', color: GH.fgMuted }}>
               Special characters and the <strong style={{ color: GH.fgDefault }}>ng rule</strong>:{' '}
               <Key k="ng" /> before a vowel → anusvara + ग + mātrā; before consonant/end → anusvara only.
               Two consonants with no vowel automatically insert halant (् ).
@@ -699,7 +699,7 @@ function ReferencePanel() {
                     <td style={{
                       ...s.td,
                       fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-                      fontSize: '16px',
+                      fontSize: '18px',
                       color: GH.accentFg,
                     }}>
                       {ex.devanagari}
@@ -739,7 +739,7 @@ function ShortcutsBar() {
       }),
     }}>
       <span style={{
-        fontSize: '11px',
+        fontSize: '13px',
         fontWeight: 600,
         color: GH.fgSubtle,
         textTransform: 'uppercase',
@@ -754,7 +754,7 @@ function ShortcutsBar() {
           display: 'inline-flex',
           alignItems: 'center',
           gap: '5px',
-          fontSize: '12px',
+          fontSize: '14px',
           color: GH.fgMuted,
           marginRight: '20px',
           padding: '2px 0',
@@ -836,7 +836,7 @@ export default function App() {
         display: 'flex',
         justifyContent: 'center',
         gap: '24px',
-        fontSize: '12px',
+        fontSize: '13px',
         color: GH.fgSubtle,
         flexWrap: 'wrap',
       }}>
