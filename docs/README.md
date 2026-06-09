@@ -21,6 +21,7 @@ open-source reimplementation in TypeScript + React.
 | 10 | [Testing Guide](10-testing.md) | Test taxonomy, running tests, adding new cases |
 | 11 | [Performance & Future Work](11-performance.md) | Trie, FST, WASM, dictionary suggestions |
 | 12 | [Typing Quick-Reference](12-quick-reference.md) | Full cheat-sheet for end users |
+| — | [Fixes & Improvements](fixes_improvements/00-index.md) | Bug tracker, engine gaps, feature roadmap, UI issues, testing gaps |
 
 ---
 
