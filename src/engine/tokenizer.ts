@@ -14,6 +14,12 @@
  * before: 'ko' would greedily consume 'k' + 'ou').
  *
  * Unrecognised characters pass through unchanged (digits, spaces, etc.).
+ *
+ * Duplicate-key guard
+ * -------------------
+ * In development, buildTrie asserts that no two mapping tables share the same
+ * key string.  A duplicate would cause one entry's kind to silently overwrite
+ * the other's in the trie (ENG-008).
  */
 
 import { VOWEL_MAPPINGS, CONSONANT_MAPPINGS, SPECIAL_MAPPINGS } from './mappings';
@@ -43,6 +49,20 @@ function newNode(): TrieNode {
 }
 
 function buildTrie(entries: Entry[]): TrieNode {
+  // Guard against duplicate keys across mapping tables in development (ENG-008).
+  if (import.meta.env.DEV) {
+    const seen = new Map<string, TokenKind>();
+    for (const { key, kind } of entries) {
+      if (seen.has(key)) {
+        throw new Error(
+          `Duplicate trie key "${key}": first as ${seen.get(key)}, now as ${kind}. ` +
+          'Check VOWEL_MAPPINGS, CONSONANT_MAPPINGS, and SPECIAL_MAPPINGS for conflicts.',
+        );
+      }
+      seen.set(key, kind);
+    }
+  }
+
   const root = newNode();
   for (const { key, kind } of entries) {
     let node = root;

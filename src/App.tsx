@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useBodoIME } from './hooks/useBodoIME';
+import { transliterate } from './engine/transliterator';
 import './App.css';
 
 // ─── GitHub design tokens ─────────────────────────────────────────────────────
@@ -500,17 +501,18 @@ function Header({ imeActive, onToggleIme }: { imeActive: boolean; onToggleIme: (
 
 // ─── Editor panel ─────────────────────────────────────────────────────────────
 
-function EditorPanel({ imeActive }: { imeActive: boolean }) {
+function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleIme: () => void }) {
   const ime = useBodoIME();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [focused, setFocused] = useState(false);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'F9') { e.preventDefault(); return; }
+      // F9 toggles IME — update the shared state in App (UI-007 fix).
+      if (e.key === 'F9') { e.preventDefault(); onToggleIme(); return; }
       if (imeActive) ime.handleKeyDown(e);
     },
-    [ime, imeActive],
+    [ime, imeActive, onToggleIme],
   );
 
   const charCount = [...ime.value].length;
@@ -528,6 +530,7 @@ function EditorPanel({ imeActive }: { imeActive: boolean }) {
           value={imeActive ? ime.romanBuffer : ime.value}
           onChange={e => { if (!imeActive) ime.setRoman(e.target.value); }}
           onKeyDown={handleKeyDown}
+          onPaste={imeActive ? ime.handlePaste : undefined}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder={imeActive ? 'Type in Roman — e.g. bwdw → बोदो' : 'IME off — typing in English'}
@@ -559,9 +562,7 @@ function EditorPanel({ imeActive }: { imeActive: boolean }) {
               fontSize: '18px',
               color: GH.accentFg,
             }}>
-              {/* Show only the in-progress portion */}
-              {ime.value.slice(ime.value.length - ime.romanBuffer.length >= 0
-                ? ime.value.length - ime.romanBuffer.length : 0)}
+              {transliterate(ime.romanBuffer)}
             </span>
           </div>
         )}
@@ -805,7 +806,7 @@ export default function App() {
             </span>
           </div>
           <div style={s.divider} />
-          <EditorPanel imeActive={imeActive} />
+          <EditorPanel imeActive={imeActive} onToggleIme={toggleIme} />
         </div>
 
         {/* Right — Reference */}

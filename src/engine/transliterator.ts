@@ -5,10 +5,10 @@
  * -------------------
  *
  *   Roman string
- *       ↓  tokenize()         (longest-match, typed tokens)
+ *       ↓  tokenize()         (longest-match trie, typed tokens)
  *   Token[]
- *       ↓  processTokens()    (state machine)
- *   Unicode string
+ *       ↓  state machine
+ *   Unicode string (NFC-normalised)
  *
  * State machine states
  * --------------------
@@ -31,6 +31,11 @@
  * 'o' after a consonant = inherent vowel.  No visible sign is added; the
  * consonant is simply committed as-is (Devanagari inherent-a convention).
  * 'o' at word start / after vowel = standalone अ.
+ *
+ * Avagraha ('.a')
+ * ---------------
+ * Only emitted after a vowel has been output (ENG-004 fix).  Typing '.a'
+ * after a consonant or at the start of input is silently discarded.
  */
 
 import { tokenize } from './tokenizer';
@@ -48,12 +53,12 @@ import { U } from './unicode';
 type State = 'initial' | 'after_consonant' | 'after_vowel';
 
 /**
- * Transliterate a Roman-script string into Bodo Devanagari Unicode.
+ * Transliterate a Roman-script string into Bodo Devanagari Unicode (NFC).
  *
  * @example
- * transliterate('namoskaar') → 'नमोस्कार'
- * transliterate('bodo')      → 'बोदो'
- * transliterate('gonga')     → 'गंगा'
+ * transliterate('bwdw')   → 'बोदो'
+ * transliterate('gonga')  → 'गंगा'
+ * transliterate('sang')   → 'सां'
  */
 export function transliterate(input: string): string {
   if (!input) return '';
@@ -95,13 +100,7 @@ export function transliterate(input: string): string {
     // ── Consonant ─────────────────────────────────────────────────────────
     if (isConsonantToken(token)) {
       const cChar = consonantCharFor(token.raw);
-
-      if (state === 'after_consonant') {
-        // Conjunct: previous consonant gets halant, new consonant begins
-        out += U.HALANT + cChar;
-      } else {
-        out += cChar;
-      }
+      out += state === 'after_consonant' ? U.HALANT + cChar : cChar;
       state = 'after_consonant';
       i++;
       continue;
@@ -111,15 +110,10 @@ export function transliterate(input: string): string {
     if (isVowelToken(token)) {
       if (state === 'after_consonant') {
         const matra = matraFor(token.raw);
-        if (matra === '') {
-          // Inherent vowel ('o' key): consonant is committed, no sign added.
-          // Nothing appended — the consonant is already in `out`.
-        } else {
-          out += matra;
-        }
+        if (matra !== '') out += matra;
+        // inherent vowel ('o'): consonant already in out, nothing appended
         state = 'after_vowel';
       } else {
-        // Standalone vowel (initial or post-vowel position)
         out += standaloneVowelFor(token.raw);
         state = 'after_vowel';
       }
@@ -127,7 +121,7 @@ export function transliterate(input: string): string {
       continue;
     }
 
-    // Fallback (should not happen)
+    // Fallback (should not be reached)
     out += token.raw;
     state = 'initial';
     i++;
@@ -137,19 +131,10 @@ export function transliterate(input: string): string {
 }
 
 /**
- * Transliterate only a single "word segment" (portion without spaces).
- * Useful for partial re-transliteration as the user types.
- */
-export function transliterateSegment(segment: string): string {
-  return transliterate(segment);
-}
-
-/**
  * Given a complete Roman input and a cursor position within it,
  * return the corresponding cursor position in the Unicode output.
  *
- * Strategy: transliterate prefixes of increasing length and measure the
- * output length at each step.
+ * Used by cursor-tracking support (see docs/fixes_improvements/01-bug-tracker.md#BUG-003).
  */
 export function mapCursorPosition(roman: string, romanCursor: number): number {
   return transliterate(roman.slice(0, romanCursor)).length;
