@@ -56,6 +56,8 @@ export const U = {
   JA:  'ज', // ज  — DOCUMENTED (key: j)
   JHA: 'झ', // झ  — INFERRED   (key: jh/J)
   NYA: 'ञ', // ञ  — INFERRED   (key: NY)
+  WAO: 'वाव', // वाव — INFERRED   (key: wao)
+  YAO: 'याव', // याव — INFERRED   (key: yao)
 
   // Retroflexes
   TTA:  'ट', // ट  — INFERRED   (key: T)

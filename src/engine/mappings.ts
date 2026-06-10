@@ -72,6 +72,10 @@ export const CONSONANT_MAPPINGS: Record<string, ConsonantEntry> = {
   'khy': { char: U.KHA + U.HALANT + U.SSA, source: 'inferred' }, // conjunct kṣ
   'NYo': { char: U.NYA, source: 'inferred' }, // base form of ञ
 
+  // 2-char sequences with aspirated variants
+  'wao': { char: U.WAO, source: 'inferred' }, // वाव
+  'yao': { char: U.YAO, source: 'inferred' }, // वाव
+
   // 2-char sequences
   'NG':  { char: U.NGA,  source: 'documented' },
   'NY':  { char: U.NYA,  source: 'inferred'   },
