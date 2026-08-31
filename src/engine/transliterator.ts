@@ -36,6 +36,12 @@
  * ---------------
  * Only emitted after a vowel has been output (ENG-004 fix).  Typing '.a'
  * after a consonant or at the start of input is silently discarded.
+ *
+ * Underscore ('_')
+ * ----------------
+ * Silent word-boundary marker: resets the state machine to INITIAL (so it
+ * doesn't join into a conjunct/mātrā with what follows) but emits no
+ * character of its own.
  */
 
 import { tokenize } from './tokenizer';
@@ -74,6 +80,13 @@ export function transliterate(input: string): string {
     // ── Special / symbol ──────────────────────────────────────────────────
     if (token.kind === 'special') {
       out += SPECIAL_MAPPINGS[token.raw].output;
+      state = 'initial';
+      i++;
+      continue;
+    }
+
+    // ── Underscore — silent word-boundary marker, emits nothing ──────────
+    if (token.kind === 'passthrough' && token.raw === '_') {
       state = 'initial';
       i++;
       continue;
