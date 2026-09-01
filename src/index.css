@@ -27,6 +27,30 @@ html, body { margin: 0; height: 100%; }
   --gh-hover-border:    #8b949e;
   --gh-row-stripe:      #0d111766;
   color-scheme: dark;
+
+  /* Type scale — bumped up at large/high-res viewports (see media query
+     below) so text doesn't read as tiny on 1440p+ displays. */
+  --fs-11: 11px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --fs-11: 13px;
+    --fs-13: 15px;
+    --fs-14: 17px;
+    --fs-15: 18px;
+    --fs-16: 19px;
+    --fs-18: 22px;
+    --fs-20: 24px;
+    --fs-24: 29px;
+  }
 }
 
 :root[data-theme="light"] {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useBodoIME } from './hooks/useBodoIME';
 import { transliterate } from './engine/transliterator';
 import './App.css';
@@ -42,7 +42,7 @@ const s = {
     backgroundColor: GH.canvasDefault,
     color: GH.fgDefault,
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif",
-    fontSize: '16px',
+    fontSize: 'var(--fs-16)',
     lineHeight: '1.5',
   } as React.CSSProperties,
 
@@ -92,7 +92,7 @@ const s = {
     borderRadius: '6px',
     color: GH.fgDefault,
     fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
-    fontSize: '16px',
+    fontSize: 'var(--fs-16)',
     lineHeight: '1.6',
     padding: '12px',
     resize: 'vertical',
@@ -107,7 +107,7 @@ const s = {
     borderRadius: '6px',
     color: GH.fgDefault,
     fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-    fontSize: '24px',
+    fontSize: 'var(--fs-24)',
     lineHeight: '1.8',
     padding: '12px',
     minHeight: '80px',
@@ -121,7 +121,7 @@ const s = {
     color: '#ffffff',
     cursor: 'pointer',
     fontFamily: 'inherit',
-    fontSize: '15px',
+    fontSize: 'var(--fs-15)',
     fontWeight: 500,
     padding: '6px 16px',
     display: 'inline-flex',
@@ -139,7 +139,7 @@ const s = {
     color: GH.fgDefault,
     cursor: 'pointer',
     fontFamily: 'inherit',
-    fontSize: '15px',
+    fontSize: 'var(--fs-15)',
     fontWeight: 500,
     padding: '6px 16px',
     display: 'inline-flex',
@@ -156,7 +156,7 @@ const s = {
     color: GH.dangerFg,
     cursor: 'pointer',
     fontFamily: 'inherit',
-    fontSize: '15px',
+    fontSize: 'var(--fs-15)',
     fontWeight: 500,
     padding: '6px 16px',
     display: 'inline-flex',
@@ -172,7 +172,7 @@ const s = {
     gap: '4px',
     padding: '0 8px',
     height: '22px',
-    fontSize: '13px',
+    fontSize: 'var(--fs-13)',
     fontWeight: 500,
     borderRadius: '20px',
     color,
@@ -189,7 +189,7 @@ const s = {
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    fontSize: '14px',
+    fontSize: 'var(--fs-14)',
   } as React.CSSProperties,
 
   th: {
@@ -211,7 +211,7 @@ const s = {
 
   code: {
     fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
-    fontSize: '13px',
+    fontSize: 'var(--fs-13)',
     backgroundColor: GH.canvasDefault,
     border: `1px solid ${GH.borderMuted}`,
     borderRadius: '3px',
@@ -220,7 +220,7 @@ const s = {
   } as React.CSSProperties,
 
   sectionLabel: {
-    fontSize: '13px',
+    fontSize: 'var(--fs-13)',
     fontWeight: 600,
     color: GH.fgMuted,
     textTransform: 'uppercase',
@@ -230,7 +230,7 @@ const s = {
   } as React.CSSProperties,
 
   h2: {
-    fontSize: '18px',
+    fontSize: 'var(--fs-18)',
     fontWeight: 600,
     color: GH.fgDefault,
     margin: 0,
@@ -454,7 +454,7 @@ function Tabs({
             alignItems: 'center',
             gap: '6px',
             padding: '8px 16px',
-            fontSize: '14px',
+            fontSize: 'var(--fs-14)',
             fontWeight: on ? 600 : 400,
             color: on ? GH.fgDefault : GH.fgMuted,
             background: 'none',
@@ -496,7 +496,7 @@ function RefTable({ rows }: { rows: { keys: string[]; output: string; label: str
             <td style={{
               ...s.td,
               fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: '18px',
+              fontSize: 'var(--fs-18)',
               color: GH.accentFg,
             }}>
               {row.output}
@@ -510,7 +510,7 @@ function RefTable({ rows }: { rows: { keys: string[]; output: string; label: str
 }
 
 // Pure phonetic-chart table (bodo_deva.md): Devanagari, optional dependent
-// diacritic form, Roman transcription, IPA. No typing keys here.
+// diacritic form, Roman transcription. No typing keys here.
 function ChartTable({
   rows,
   showDiacritic = false,
@@ -525,7 +525,6 @@ function ChartTable({
           <th style={s.th}>Devanagari</th>
           {showDiacritic && <th style={s.th}>Diacritic</th>}
           <th style={s.th}>Roman</th>
-          <th style={s.th}>IPA</th>
         </tr>
       </thead>
       <tbody>
@@ -534,7 +533,7 @@ function ChartTable({
             <td style={{
               ...s.td,
               fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: '20px',
+              fontSize: 'var(--fs-20)',
               color: GH.accentFg,
             }}>
               {row.output}
@@ -543,16 +542,13 @@ function ChartTable({
               <td style={{
                 ...s.td,
                 fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-                fontSize: '20px',
+                fontSize: 'var(--fs-20)',
                 color: GH.fgMuted,
               }}>
                 {row.diacritic}
               </td>
             )}
             <td style={{ ...s.td, color: GH.fgDefault, fontStyle: 'italic' }}>{row.roman}</td>
-            <td style={{ ...s.td, color: GH.fgMuted, fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}>
-              {row.ipa}
-            </td>
           </tr>
         ))}
       </tbody>
@@ -578,13 +574,13 @@ function Header({
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         <span style={{
           fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-          fontSize: '20px',
+          fontSize: 'var(--fs-20)',
           lineHeight: 1,
           color: GH.accentFg,
         }}>
           ब
         </span>
-        <span style={{ fontWeight: 600, fontSize: '16px' }}>Bodo Typewriter</span>
+        <span style={{ fontWeight: 600, fontSize: 'var(--fs-16)' }}>Bodo Typewriter</span>
         <span style={s.label(GH.fgSubtle, 'transparent', GH.borderMuted)}>v1.0</span>
       </div>
 
@@ -592,12 +588,12 @@ function Header({
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <StatusDot active={imeActive} />
-        <span style={{ fontSize: '14px', color: GH.fgMuted }}>
+        <span style={{ fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
           IME {imeActive ? 'enabled' : 'disabled'}
         </span>
         <Btn variant="secondary" onClick={onToggleIme} title="Toggle transliteration (F9)">
           <IcoKeyboard />
-          <span style={{ fontSize: '13px', color: GH.fgSubtle, marginLeft: '2px' }}>F9</span>
+          <span style={{ fontSize: 'var(--fs-13)', color: GH.fgSubtle, marginLeft: '2px' }}>F9</span>
         </Btn>
         <Btn
           variant="secondary"
@@ -645,7 +641,6 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
   const ime = useBodoIME({
     onCommit: text => setParagraph(p => p + text),
   });
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [focused, setFocused] = useState(false);
   const [plainRoman, setPlainRoman] = useState('');
 
@@ -674,7 +669,7 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
       <div style={{ flexShrink: 0 }}>
         <span style={s.sectionLabel}>Roman input</span>
         <textarea
-          ref={textareaRef}
+          ref={imeActive ? ime.ref : undefined}
           rows={4}
           value={imeActive ? ime.romanBuffer : plainRoman}
           onChange={e => { if (!imeActive) setPlainRoman(e.target.value); }}
@@ -682,7 +677,7 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
           onPaste={imeActive ? ime.handlePaste : undefined}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder={imeActive ? 'Type in Roman — e.g. bwdw → बोदो' : 'IME off — typing in English'}
+          placeholder={imeActive ? 'Type in Roman — e.g. bwdw → बोदो\nkhalam_dwng → खालामदों' : 'IME off — typing in English'}
           spellCheck={false}
           style={{
             ...s.textarea,
@@ -710,7 +705,7 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
               display: 'inline-flex',
               alignItems: 'center',
               gap: '5px',
-              fontSize: '11px',
+              fontSize: 'var(--fs-11)',
               fontWeight: 600,
               color: GH.accentFg,
               textTransform: 'uppercase',
@@ -723,11 +718,11 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
 
             <Key k={ime.romanBuffer} />
 
-            <span style={{ color: GH.fgSubtle, fontSize: '14px', flexShrink: 0 }}>→</span>
+            <span style={{ color: GH.fgSubtle, fontSize: 'var(--fs-14)', flexShrink: 0 }}>→</span>
 
             <span style={{
               fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: '20px',
+              fontSize: 'var(--fs-20)',
               fontWeight: 500,
               color: GH.fgDefault,
               wordBreak: 'break-all',
@@ -752,7 +747,7 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            fontSize: '14px',
+            fontSize: 'var(--fs-14)',
             color: GH.attentionFg,
           }}>
             <span>⚠</span>
@@ -806,7 +801,7 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
       <div style={{
         display: 'flex',
         gap: '16px',
-        fontSize: '13px',
+        fontSize: 'var(--fs-13)',
         color: GH.fgSubtle,
         flexWrap: 'wrap',
         paddingTop: '4px',
@@ -841,26 +836,24 @@ function ReferencePanel() {
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {tab === 'vowels' && (
           <>
-            <p style={{ margin: '10px 0 8px', fontSize: '14px', color: GH.fgMuted }}>
+            <p style={{ margin: '10px 0 8px', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
               Bodo Devanagari vowels — independent form, dependent diacritic (mātrā) form,
-              Roman transcription, and IPA. Reference chart, from{' '}
-              <code style={s.code}>bodo_deva.md</code>.
+              and Roman transcription.
             </p>
             <ChartTable rows={VOWEL_REF} showDiacritic />
           </>
         )}
         {tab === 'consonants' && (
           <>
-            <p style={{ margin: '10px 0 8px', fontSize: '14px', color: GH.fgMuted }}>
-              Bodo Devanagari consonants — with Roman transcription and IPA. Reference chart,
-              from <code style={s.code}>bodo_deva.md</code>.
+            <p style={{ margin: '10px 0 8px', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
+              Bodo Devanagari consonants — with Roman transcription.
             </p>
             <ChartTable rows={CONSONANT_REF} />
           </>
         )}
         {tab === 'special' && (
           <>
-            <p style={{ margin: '10px 0 8px', fontSize: '14px', color: GH.fgMuted }}>
+            <p style={{ margin: '10px 0 8px', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
               Special characters and the <strong style={{ color: GH.fgDefault }}>ng rule</strong>:{' '}
               <Key k="ng" /> before a vowel → anusvara + ग + mātrā; before consonant/end → anusvara only.
               Two consonants with no vowel automatically insert halant (् ).
@@ -885,7 +878,7 @@ function ReferencePanel() {
                     <td style={{
                       ...s.td,
                       fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-                      fontSize: '18px',
+                      fontSize: 'var(--fs-18)',
                       color: GH.accentFg,
                     }}>
                       {ex.devanagari}
@@ -924,10 +917,10 @@ function BottomBar() {
       alignItems: 'center',
       gap: '20px',
       flexWrap: 'wrap',
-      fontSize: '13px',
+      fontSize: 'var(--fs-13)',
     }}>
       <span style={{
-        fontSize: '13px',
+        fontSize: 'var(--fs-13)',
         fontWeight: 600,
         color: GH.fgSubtle,
         textTransform: 'uppercase',
@@ -942,7 +935,7 @@ function BottomBar() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',
-            fontSize: '14px',
+            fontSize: 'var(--fs-14)',
             color: GH.fgMuted,
           }}>
             <Key k={item.key} />

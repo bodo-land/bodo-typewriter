@@ -23,12 +23,24 @@
  * boundary — it lets the browser move focus to the next element as normal
  * (fixes BUG-005).
  *
+ * Cursor-aware editing
+ * ─────────────────────
+ * Typing, Backspace and Delete all act at the textarea's actual caret
+ * position (or replace its selection), not just at the end of the buffer —
+ * so clicking into the middle of a composing word (e.g. "fo_ra_y_bw_na_i")
+ * and inserting a character there edits in place instead of the keystroke
+ * landing at the end. `ref` must be attached to the host textarea for this
+ * to work: since the textarea is React-controlled, updating its value alone
+ * would otherwise snap the caret to the end on every keystroke, so this
+ * hook restores the caret itself after each edit.
+ *
  * Backspace
  * ─────────
- * Smart backspace: removes the last Roman character from romanBuffer and
- * re-transliterates. If romanBuffer is already empty, Backspace is a no-op —
- * it never reaches into previously committed text (this is the fix for the
- * "holding Backspace erases everything" bug).
+ * Smart backspace: removes the Roman character before the caret (or the
+ * selected range) and re-transliterates. No-op if the caret is already at
+ * position 0 with nothing selected — it never reaches into previously
+ * committed text (this is the fix for the "holding Backspace erases
+ * everything" bug).
  *
  * Paste
  * ─────
@@ -37,7 +49,7 @@
  * `onCommit`, then clears the buffer.
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { transliterate } from '../engine/transliterator';
 
 export type UseBodoIMEOptions = {
@@ -50,10 +62,12 @@ export type IMEState = {
   value: string;
   /** Roman buffer for the current in-progress word */
   romanBuffer: string;
+  /** Attach to the host textarea — required for cursor-aware editing. */
+  ref: React.RefObject<HTMLTextAreaElement | null>;
   /** Handle a keydown event on the host element */
-  handleKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   /** Handle a paste event on the host element */
-  handlePaste: (e: React.ClipboardEvent<HTMLElement>) => void;
+  handlePaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
   /** Directly set the entire Roman buffer (e.g. for programmatic input) */
   setRoman: (roman: string) => void;
   /** Clear the composing buffer (does not touch anything already committed) */
@@ -67,26 +81,61 @@ const COMMIT_CHARS = new Set([' ', 'Enter', '\n', '\r']);
 export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
   const { onCommit } = options;
   const [romanBuffer, setRomanBuffer] = useState('');
+  const ref = useRef<HTMLTextAreaElement>(null);
+  // Caret position to restore after a buffer edit — the textarea is
+  // React-controlled, so setting .value alone would otherwise snap the
+  // caret to the end.
+  const pendingCaret = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (pendingCaret.current !== null && ref.current) {
+      const pos = pendingCaret.current;
+      pendingCaret.current = null;
+      ref.current.setSelectionRange(pos, pos);
+    }
+  }, [romanBuffer]);
 
   const value = transliterate(romanBuffer);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLElement>) => {
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       const key = e.key;
 
       // Let browser handle ctrl/meta shortcuts (undo, copy, etc.)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      // Smart backspace — undo last Roman keystroke. No-op once the buffer
-      // is empty; previously committed words are out of reach from here.
+      const target = e.currentTarget;
+      const selStart = target.selectionStart ?? romanBuffer.length;
+      const selEnd = target.selectionEnd ?? romanBuffer.length;
+      const hasSelection = selStart !== selEnd;
+
+      // Smart backspace — deletes the selection, or the Roman character
+      // before the caret. No-op at position 0 with nothing selected;
+      // previously committed words are out of reach from here.
       if (key === 'Backspace') {
         e.preventDefault();
-        setRomanBuffer(prev => (prev.length > 0 ? prev.slice(0, -1) : prev));
+        if (hasSelection) {
+          pendingCaret.current = selStart;
+          setRomanBuffer(prev => prev.slice(0, selStart) + prev.slice(selEnd));
+        } else if (selStart > 0) {
+          pendingCaret.current = selStart - 1;
+          setRomanBuffer(prev => prev.slice(0, selStart - 1) + prev.slice(selStart));
+        }
         return;
       }
 
-      // Delete — not yet implemented (requires cursor-position tracking)
-      if (key === 'Delete') return;
+      // Delete — removes the selection, or the Roman character after the caret.
+      if (key === 'Delete') {
+        e.preventDefault();
+        if (hasSelection) {
+          pendingCaret.current = selStart;
+          setRomanBuffer(prev => prev.slice(0, selStart) + prev.slice(selEnd));
+        } else if (selStart < romanBuffer.length) {
+          pendingCaret.current = selStart;
+          setRomanBuffer(prev => prev.slice(0, selStart) + prev.slice(selStart + 1));
+        }
+        return;
+      }
 
       // Word boundary: commit buffer + a space, then clear. Enter is treated
       // the same as Space — it does not insert a hard line break (see
@@ -98,10 +147,12 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
         return;
       }
 
-      // Printable single character — append to Roman buffer
+      // Printable single character — insert at the caret (replacing any
+      // selection), not always at the end.
       if (key.length === 1) {
         e.preventDefault();
-        setRomanBuffer(prev => prev + key);
+        pendingCaret.current = selStart + 1;
+        setRomanBuffer(prev => prev.slice(0, selStart) + key + prev.slice(selEnd));
         return;
       }
 
@@ -113,7 +164,7 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
   // Paste handler — commits current buffer + transliterated pasted text in
   // one step (fixes BUG-002), then clears the buffer.
   const handlePaste = useCallback(
-    (e: React.ClipboardEvent<HTMLElement>) => {
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
       e.preventDefault();
       const pasted = e.clipboardData.getData('text/plain');
       if (!pasted) return;
@@ -134,6 +185,7 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
   return {
     value,
     romanBuffer,
+    ref,
     handleKeyDown,
     handlePaste,
     setRoman,
