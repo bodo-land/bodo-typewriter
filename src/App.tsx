@@ -260,39 +260,47 @@ const VOWEL_REF = [
   { output: 'ँ',  diacritic: '—',  roman: 'ṅ',    ipa: '[ ̃ ]' },
 ];
 
+// Consonant chart ("खौरां हांखो :: व्यंजन वर्ण :: Consonant") — full 5x5
+// Devanagari grid plus the semivowel/sibilant/conjunct row and the two
+// nasal diacritics, each with the simple phonetic romanization given.
 const CONSONANT_REF = [
-  { output: 'क',   roman: 'kô',     ipa: '[kɔ]' },
-  { output: 'ख',   roman: 'khô',    ipa: '[kʰɔ]' },
-  { output: 'ग',   roman: 'gô',     ipa: '[gɔ]' },
-  { output: 'घ',   roman: 'ghô',    ipa: '[gɦɔ]' },
-  { output: 'ङ',   roman: 'ṅgô',    ipa: '[ŋɔ]' },
-  { output: 'च',   roman: 'cô',     ipa: '[sɔ]' },
-  { output: 'छ',   roman: 'chô',    ipa: '[sʰɔ]' },
-  { output: 'ज',   roman: 'zô',     ipa: '[zɔ]' },
-  { output: 'ट',   roman: 'ṭô',     ipa: '[ʈɔ]' },
-  { output: 'ठ',   roman: 'ṭhô',    ipa: '[ʈʰɔ]' },
-  { output: 'ड',   roman: 'ḍô',     ipa: '[ɖɔ]' },
-  { output: 'त',   roman: 'tô',     ipa: '[tɔ]' },
-  { output: 'थ',   roman: 'thô',    ipa: '[tʰɔ]' },
-  { output: 'द',   roman: 'dô',     ipa: '[dɔ]' },
-  { output: 'ध',   roman: 'dhô',    ipa: '[dɦɔ]' },
-  { output: 'न',   roman: 'nô',     ipa: '[nɔ]' },
-  { output: 'प',   roman: 'pô',     ipa: '[pɔ]' },
-  { output: 'फ',   roman: 'phô',    ipa: '[pʰɔ]' },
-  { output: 'ब',   roman: 'bô',     ipa: '[bɔ]' },
-  { output: 'भ',   roman: 'bhô',    ipa: '[bɦɔ]' },
-  { output: 'म',   roman: 'mô',     ipa: '[mɔ]' },
-  { output: 'य',   roman: 'yô',     ipa: '[jɔ]' },
-  { output: 'र',   roman: 'rô',     ipa: '[rɔ]' },
-  { output: 'ल',   roman: 'lô',     ipa: '[lɔ]' },
-  { output: 'व',   roman: 'wô',     ipa: '[wɔ]' },
-  { output: 'श',   roman: 'shô',    ipa: '[sɔ]' },
-  { output: 'स',   roman: 'sô',     ipa: '[sɔ]' },
-  { output: 'ह',   roman: 'hô',     ipa: '[ɦɔ]' },
-  { output: 'त्',  roman: 'half t', ipa: '[t]' },
-  { output: 'ड़',  roman: 'ṛô',     ipa: '[ɽɔ]' },
-  { output: 'ढ़',  roman: 'ṛhô',    ipa: '[ɽʰɔ]' },
-  { output: 'क्ष', roman: 'khyô',   ipa: '[kʰjɔ]' },
+  { output: 'क', roman: 'k' },
+  { output: 'ख', roman: 'kh' },
+  { output: 'ग', roman: 'g' },
+  { output: 'घ', roman: 'gh' },
+  { output: 'ङ', roman: 'ng' },
+  { output: 'च', roman: 'c' },
+  { output: 'छ', roman: 'ch' },
+  { output: 'ज', roman: 'j' },
+  { output: 'झ', roman: 'jh' },
+  { output: 'ञ', roman: 'ny' },
+  { output: 'ट', roman: 't' },
+  { output: 'ठ', roman: 'th' },
+  { output: 'ड', roman: 'd' },
+  { output: 'ढ', roman: 'dh' },
+  { output: 'ण', roman: 'n' },
+  { output: 'त', roman: 't' },
+  { output: 'थ', roman: 'th' },
+  { output: 'द', roman: 'd' },
+  { output: 'ध', roman: 'dh' },
+  { output: 'न', roman: 'n' },
+  { output: 'प', roman: 'p' },
+  { output: 'फ', roman: 'ph' },
+  { output: 'ब', roman: 'b' },
+  { output: 'भ', roman: 'bh' },
+  { output: 'म', roman: 'm' },
+  { output: 'य', roman: 'y' },
+  { output: 'र', roman: 'r' },
+  { output: 'ल', roman: 'l' },
+  { output: 'व', roman: 'w' },
+  { output: 'श', roman: 'sh' },
+  { output: 'ष', roman: 'sh' },
+  { output: 'स', roman: 's' },
+  { output: 'ह', roman: 'h' },
+  { output: 'क्ष', roman: 'khy' },
+  { output: 'ड़', roman: 'r' },
+  { output: 'ं', roman: 'angsaar' },
+  { output: 'ँ', roman: 'akhaaphur' },
 ];
 
 const SPECIAL_REF = [
@@ -515,7 +523,7 @@ function ChartTable({
   rows,
   showDiacritic = false,
 }: {
-  rows: { output: string; diacritic?: string; roman: string; ipa: string }[];
+  rows: { output: string; diacritic?: string; roman: string; ipa?: string }[];
   showDiacritic?: boolean;
 }) {
   return (
