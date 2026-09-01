@@ -1,34 +1,44 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useBodoIME } from './hooks/useBodoIME';
 import { transliterate } from './engine/transliterator';
 import './App.css';
 
 // ─── GitHub design tokens ─────────────────────────────────────────────────────
-// Sourced from github.com/primer/primitives dark-mode tokens.
+// Values live as CSS custom properties (see index.css) so a light/dark theme
+// switch is just flipping `data-theme` on <html> — every inline style below
+// keeps working unchanged because these all resolve through var().
 const GH = {
-  canvasDefault:  '#0d1117',
-  canvasSubtle:   '#161b22',
-  canvasInset:    '#010409',
-  borderDefault:  '#30363d',
-  borderMuted:    '#21262d',
-  fgDefault:      '#e6edf3',
-  fgMuted:        '#7d8590',
-  fgSubtle:       '#6e7681',
-  accentFg:       '#2f81f7',
-  accentEmphasis: '#1f6feb',
-  accentSubtle:   '#121d2f',
-  successFg:      '#3fb950',
-  successSubtle:  '#0f2d1a',
-  attentionFg:    '#d29922',
-  dangerFg:       '#f85149',
-  dangerSubtle:   '#2d0f0e',
+  canvasDefault:  'var(--gh-canvas-default)',
+  canvasSubtle:   'var(--gh-canvas-subtle)',
+  canvasInset:    'var(--gh-canvas-inset)',
+  borderDefault:  'var(--gh-border-default)',
+  borderMuted:    'var(--gh-border-muted)',
+  fgDefault:      'var(--gh-fg-default)',
+  fgMuted:        'var(--gh-fg-muted)',
+  fgSubtle:       'var(--gh-fg-subtle)',
+  accentFg:       'var(--gh-accent-fg)',
+  accentEmphasis: 'var(--gh-accent-emphasis)',
+  accentSubtle:   'var(--gh-accent-subtle)',
+  successFg:      'var(--gh-success-fg)',
+  successSubtle:  'var(--gh-success-subtle)',
+  attentionFg:    'var(--gh-attention-fg)',
+  dangerFg:       'var(--gh-danger-fg)',
+  dangerSubtle:   'var(--gh-danger-subtle)',
+  hoverBg:        'var(--gh-hover-bg)',
+  hoverBorder:    'var(--gh-hover-border)',
+  rowStripe:      'var(--gh-row-stripe)',
 } as const;
+
+type Theme = 'dark' | 'light';
+const THEME_KEY = 'bodo-typewriter-theme';
 
 // ─── Style helpers ────────────────────────────────────────────────────────────
 
 const s = {
   page: {
-    minHeight: '100vh',
+    height: '100dvh',
+    display: 'flex',
+    flexDirection: 'column',
     backgroundColor: GH.canvasDefault,
     color: GH.fgDefault,
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif",
@@ -39,14 +49,33 @@ const s = {
   header: {
     backgroundColor: GH.canvasSubtle,
     borderBottom: `1px solid ${GH.borderDefault}`,
-    height: '48px',
+    height: '52px',
+    flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
-    padding: '0 16px',
+    padding: '0 clamp(16px, 3vw, 40px)',
     gap: '16px',
-    position: 'sticky',
-    top: 0,
     zIndex: 40,
+  } as React.CSSProperties,
+
+  mainGrid: {
+    flex: 1,
+    minHeight: 0,
+    width: '100%',
+    maxWidth: '2000px',
+    margin: '0 auto',
+    padding: '20px clamp(16px, 3vw, 40px)',
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 0.85fr)',
+    gap: '20px',
+    boxSizing: 'border-box',
+  } as React.CSSProperties,
+
+  panelCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
+    overflow: 'hidden',
   } as React.CSSProperties,
 
   card: (extra?: React.CSSProperties): React.CSSProperties => ({
@@ -210,53 +239,60 @@ const s = {
 
 // ─── Reference data ───────────────────────────────────────────────────────────
 
+// Vowels & consonants are the chart from bodo_deva.md, verbatim: Devanagari
+// letter (+ dependent diacritic form for vowels), Roman transcription, IPA.
+// This is a phonetic reference, not the app's typing-key scheme — see the
+// "Special" tab for actual input keys.
 const VOWEL_REF = [
-  { keys: ['o'],        output: 'अ',  label: 'Short a (schwa / inherent)' },
-  { keys: ['a', 'A'],   output: 'आ',  label: 'Long aa' },
-  { keys: ['i'],        output: 'इ',  label: 'Short i' },
-  { keys: ['ee'],       output: 'ई',  label: 'Long ii' },
-  { keys: ['u'],        output: 'उ',  label: 'Short u' },
-  { keys: ['oo'],       output: 'ऊ',  label: 'Long uu' },
-  { keys: ['e'],        output: 'ए',  label: 'Vowel e' },
-  { keys: ['wi', 'ai'], output: 'ऐ',  label: 'Vowel ai / oi' },
-  { keys: ['w'],        output: 'ओ',  label: 'Vowel o' },
-  { keys: ['wo', 'ou'], output: 'औ',  label: 'Vowel au / ou' },
-  { keys: ['ng', 'M'],  output: 'ं',  label: 'Anusvara (nasal diacritic)' },
-  { keys: ['oM'],       output: 'अं', label: 'Nasal short-a' },
-  { keys: ['H'],        output: 'ः',  label: 'Visarga' },
+  { output: 'अ',  diacritic: '—',  roman: 'ô',    ipa: '[o]' },
+  { output: 'आ',  diacritic: 'ा',  roman: 'a',    ipa: '[a]' },
+  { output: 'इ',  diacritic: 'ि',  roman: 'i',    ipa: '[i]' },
+  { output: 'ई',  diacritic: 'ी',  roman: 'ī',    ipa: '[i]' },
+  { output: 'उ',  diacritic: 'ु',  roman: 'u',    ipa: '[u]' },
+  { output: 'ऊ',  diacritic: 'ू',  roman: 'ū',    ipa: '[u]' },
+  { output: 'ऋ',  diacritic: 'ृ',  roman: 'ri',   ipa: '[ri]' },
+  { output: 'ए',  diacritic: 'े',  roman: 'e',    ipa: '[e]' },
+  { output: 'ऐ',  diacritic: 'ै',  roman: 'ŵi',   ipa: '[oi/ɯi]' },
+  { output: 'ओ',  diacritic: 'ो',  roman: 'ŵ',    ipa: '[ɯ]' },
+  { output: 'औ',  diacritic: 'ौ',  roman: 'ŵu',   ipa: '[ɯu]' },
+  { output: 'ं',  diacritic: '—',  roman: 'ṅg',   ipa: '[ŋ]' },
+  { output: 'ः',  diacritic: '—',  roman: 'ah',   ipa: '[h]' },
+  { output: 'ँ',  diacritic: '—',  roman: 'ṅ',    ipa: '[ ̃ ]' },
 ];
 
 const CONSONANT_REF = [
-  { keys: ['k', 'kh'],     output: 'ख', label: 'Kha (aspirated default)' },
-  { keys: ['g'],            output: 'ग', label: 'Ga' },
-  { keys: ['gh'],           output: 'घ', label: 'Gha' },
-  { keys: ['NG'],           output: 'ङ', label: 'Nga (velar nasal)' },
-  { keys: ['c'],            output: 'च', label: 'Cha' },
-  { keys: ['C', 'ch'],      output: 'छ', label: 'Chha (aspirated)' },
-  { keys: ['j'],            output: 'ज', label: 'Ja' },
-  { keys: ['jh', 'J'],      output: 'झ', label: 'Jha' },
-  { keys: ['NY'],           output: 'ञ', label: 'Nya (palatal nasal)' },
-  { keys: ['T'],            output: 'ट', label: 'Ta (retroflex)' },
-  { keys: ['Th'],           output: 'ठ', label: 'Tha (retroflex asp.)' },
-  { keys: ['D'],            output: 'ड', label: 'Da (retroflex)' },
-  { keys: ['Dh'],           output: 'ढ', label: 'Dha (retroflex asp.)' },
-  { keys: ['N'],            output: 'ण', label: 'Na (retroflex nasal)' },
-  { keys: ['t', 'th'],      output: 'थ', label: 'Tha (dental aspirated)' },
-  { keys: ['d'],            output: 'द', label: 'Da (dental)' },
-  { keys: ['dh'],           output: 'ध', label: 'Dha (dental asp.)' },
-  { keys: ['n'],            output: 'न', label: 'Na (dental)' },
-  { keys: ['p', 'ph', 'f'], output: 'फ', label: 'Pha (aspirated default)' },
-  { keys: ['b'],            output: 'ब', label: 'Ba' },
-  { keys: ['bh', 'B'],      output: 'भ', label: 'Bha' },
-  { keys: ['m'],            output: 'म', label: 'Ma' },
-  { keys: ['y', 'I'],       output: 'य', label: 'Ya (capital I = ya)' },
-  { keys: ['r'],            output: 'र', label: 'Ra' },
-  { keys: ['l'],            output: 'ल', label: 'La' },
-  { keys: ['O'],            output: 'व', label: 'Va/Wa (capital O)' },
-  { keys: ['S', 'sh'],      output: 'श', label: 'Sha' },
-  { keys: ['x'],            output: 'ष', label: 'Ssa (retroflex sibilant)' },
-  { keys: ['s'],            output: 'स', label: 'Sa' },
-  { keys: ['h'],            output: 'ह', label: 'Ha' },
+  { output: 'क',   roman: 'kô',     ipa: '[kɔ]' },
+  { output: 'ख',   roman: 'khô',    ipa: '[kʰɔ]' },
+  { output: 'ग',   roman: 'gô',     ipa: '[gɔ]' },
+  { output: 'घ',   roman: 'ghô',    ipa: '[gɦɔ]' },
+  { output: 'ङ',   roman: 'ṅgô',    ipa: '[ŋɔ]' },
+  { output: 'च',   roman: 'cô',     ipa: '[sɔ]' },
+  { output: 'छ',   roman: 'chô',    ipa: '[sʰɔ]' },
+  { output: 'ज',   roman: 'zô',     ipa: '[zɔ]' },
+  { output: 'ट',   roman: 'ṭô',     ipa: '[ʈɔ]' },
+  { output: 'ठ',   roman: 'ṭhô',    ipa: '[ʈʰɔ]' },
+  { output: 'ड',   roman: 'ḍô',     ipa: '[ɖɔ]' },
+  { output: 'त',   roman: 'tô',     ipa: '[tɔ]' },
+  { output: 'थ',   roman: 'thô',    ipa: '[tʰɔ]' },
+  { output: 'द',   roman: 'dô',     ipa: '[dɔ]' },
+  { output: 'ध',   roman: 'dhô',    ipa: '[dɦɔ]' },
+  { output: 'न',   roman: 'nô',     ipa: '[nɔ]' },
+  { output: 'प',   roman: 'pô',     ipa: '[pɔ]' },
+  { output: 'फ',   roman: 'phô',    ipa: '[pʰɔ]' },
+  { output: 'ब',   roman: 'bô',     ipa: '[bɔ]' },
+  { output: 'भ',   roman: 'bhô',    ipa: '[bɦɔ]' },
+  { output: 'म',   roman: 'mô',     ipa: '[mɔ]' },
+  { output: 'य',   roman: 'yô',     ipa: '[jɔ]' },
+  { output: 'र',   roman: 'rô',     ipa: '[rɔ]' },
+  { output: 'ल',   roman: 'lô',     ipa: '[lɔ]' },
+  { output: 'व',   roman: 'wô',     ipa: '[wɔ]' },
+  { output: 'श',   roman: 'shô',    ipa: '[sɔ]' },
+  { output: 'स',   roman: 'sô',     ipa: '[sɔ]' },
+  { output: 'ह',   roman: 'hô',     ipa: '[ɦɔ]' },
+  { output: 'त्',  roman: 'half t', ipa: '[t]' },
+  { output: 'ड़',  roman: 'ṛô',     ipa: '[ɽɔ]' },
+  { output: 'ढ़',  roman: 'ṛhô',    ipa: '[ɽʰɔ]' },
+  { output: 'क्ष', roman: 'khyô',   ipa: '[kʰjɔ]' },
 ];
 
 const SPECIAL_REF = [
@@ -303,6 +339,14 @@ function IcoLightning() {
   return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M9.504.43a1.516 1.516 0 0 1 .437 1.688L8.218 6h4.37a1.358 1.358 0 0 1 1.087 2.172l-.639.795-.031.027-.7 1.047a1.355 1.355 0 0 1-.95.572l-3.773.34L6.457 16.3a1.353 1.353 0 0 1-1.235.7 1.359 1.359 0 0 1-1.246-.845l-.37-.95a1.358 1.358 0 0 1 .065-1.046l1.92-3.616H2.016a1.358 1.358 0 0 1-1.013-2.27L9.504.43Z"/></svg>;
 }
 
+function IcoSun() {
+  return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-9.5a.75.75 0 0 1-.75-.75V.25a.75.75 0 0 1 1.5 0v1.5A.75.75 0 0 1 8 2.5Zm0 13a.75.75 0 0 1-.75-.75v-1.5a.75.75 0 0 1 1.5 0v1.5a.75.75 0 0 1-.75.75ZM2.5 8a.75.75 0 0 1-.75.75H.25a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 2.5 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75ZM3.94 3.94a.75.75 0 0 1 0 1.06L2.88 6.06a.75.75 0 1 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Zm9.19 9.19a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 1 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0ZM3.94 12.06a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm9.19-9.19a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Z"/></svg>;
+}
+
+function IcoMoon() {
+  return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M9.598 1.591a.75.75 0 0 1 .785-.175 7 7 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.5 5.5 0 1 0 7.678-7.678Z"/></svg>;
+}
+
 // ─── Primitive components ─────────────────────────────────────────────────────
 
 function Btn({
@@ -326,7 +370,7 @@ function Btn({
 
   const hoverOverride: Record<string, React.CSSProperties> = {
     primary:   { backgroundColor: GH.accentFg },
-    secondary: { backgroundColor: '#21262d', borderColor: '#8b949e' },
+    secondary: { backgroundColor: GH.hoverBg, borderColor: GH.hoverBorder },
     danger:    { backgroundColor: GH.dangerSubtle, borderColor: GH.dangerFg },
   };
 
@@ -443,7 +487,7 @@ function RefTable({ rows }: { rows: { keys: string[]; output: string; label: str
       </thead>
       <tbody>
         {rows.map((row, i) => (
-          <tr key={i} style={{ backgroundColor: i % 2 === 1 ? '#0d111766' : 'transparent' }}>
+          <tr key={i} style={{ backgroundColor: i % 2 === 1 ? GH.rowStripe : 'transparent' }}>
             <td style={s.td}>
               <span style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                 {row.keys.map(k => <Key key={k} k={k} />)}
@@ -465,9 +509,70 @@ function RefTable({ rows }: { rows: { keys: string[]; output: string; label: str
   );
 }
 
+// Pure phonetic-chart table (bodo_deva.md): Devanagari, optional dependent
+// diacritic form, Roman transcription, IPA. No typing keys here.
+function ChartTable({
+  rows,
+  showDiacritic = false,
+}: {
+  rows: { output: string; diacritic?: string; roman: string; ipa: string }[];
+  showDiacritic?: boolean;
+}) {
+  return (
+    <table style={s.table}>
+      <thead>
+        <tr>
+          <th style={s.th}>Devanagari</th>
+          {showDiacritic && <th style={s.th}>Diacritic</th>}
+          <th style={s.th}>Roman</th>
+          <th style={s.th}>IPA</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, i) => (
+          <tr key={i} style={{ backgroundColor: i % 2 === 1 ? GH.rowStripe : 'transparent' }}>
+            <td style={{
+              ...s.td,
+              fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
+              fontSize: '20px',
+              color: GH.accentFg,
+            }}>
+              {row.output}
+            </td>
+            {showDiacritic && (
+              <td style={{
+                ...s.td,
+                fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
+                fontSize: '20px',
+                color: GH.fgMuted,
+              }}>
+                {row.diacritic}
+              </td>
+            )}
+            <td style={{ ...s.td, color: GH.fgDefault, fontStyle: 'italic' }}>{row.roman}</td>
+            <td style={{ ...s.td, color: GH.fgMuted, fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}>
+              {row.ipa}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 // ─── Header ───────────────────────────────────────────────────────────────────
 
-function Header({ imeActive, onToggleIme }: { imeActive: boolean; onToggleIme: () => void }) {
+function Header({
+  imeActive,
+  onToggleIme,
+  theme,
+  onToggleTheme,
+}: {
+  imeActive: boolean;
+  onToggleIme: () => void;
+  theme: Theme;
+  onToggleTheme: () => void;
+}) {
   return (
     <header style={s.header}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -494,17 +599,55 @@ function Header({ imeActive, onToggleIme }: { imeActive: boolean; onToggleIme: (
           <IcoKeyboard />
           <span style={{ fontSize: '13px', color: GH.fgSubtle, marginLeft: '2px' }}>F9</span>
         </Btn>
+        <Btn
+          variant="secondary"
+          onClick={onToggleTheme}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? <IcoSun /> : <IcoMoon />}
+        </Btn>
       </div>
     </header>
+  );
+}
+
+// ─── Panel header (shared by both cards) ───────────────────────────────────────
+
+function PanelHeader({
+  icon,
+  title,
+  right,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  right?: React.ReactNode;
+}) {
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexShrink: 0 }}>
+        {icon}
+        <h2 style={s.h2}>{title}</h2>
+        <div style={{ flex: 1 }} />
+        {right}
+      </div>
+      <div style={{ ...s.divider, flexShrink: 0 }} />
+    </>
   );
 }
 
 // ─── Editor panel ─────────────────────────────────────────────────────────────
 
 function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleIme: () => void }) {
-  const ime = useBodoIME();
+  // `paragraph` holds every word already committed — fully independent of
+  // the composing buffer below. Backspace only ever reaches into it when
+  // the paragraph textarea itself has focus (native textarea behaviour).
+  const [paragraph, setParagraph] = useState('');
+  const ime = useBodoIME({
+    onCommit: text => setParagraph(p => p + text),
+  });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [focused, setFocused] = useState(false);
+  const [plainRoman, setPlainRoman] = useState('');
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -515,20 +658,26 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
     [ime, imeActive, onToggleIme],
   );
 
-  const charCount = [...ime.value].length;
-  const lineCount = ime.value ? ime.value.split('\n').length : 0;
+  const resetAll = useCallback(() => {
+    ime.reset();
+    setParagraph('');
+    setPlainRoman('');
+  }, [ime]);
+
+  const charCount = [...paragraph].length;
+  const lineCount = paragraph ? paragraph.split('\n').length : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0 }}>
 
       {/* ── Roman input ── */}
-      <div>
+      <div style={{ flexShrink: 0 }}>
         <span style={s.sectionLabel}>Roman input</span>
         <textarea
           ref={textareaRef}
-          rows={6}
-          value={imeActive ? ime.romanBuffer : ime.value}
-          onChange={e => { if (!imeActive) ime.setRoman(e.target.value); }}
+          rows={4}
+          value={imeActive ? ime.romanBuffer : plainRoman}
+          onChange={e => { if (!imeActive) setPlainRoman(e.target.value); }}
           onKeyDown={handleKeyDown}
           onPaste={imeActive ? ime.handlePaste : undefined}
           onFocus={() => setFocused(true)}
@@ -547,22 +696,52 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
         {/* Composing hint */}
         {imeActive && ime.romanBuffer && (
           <div style={{
-            marginTop: '6px',
+            marginTop: '8px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            fontSize: '14px',
-            color: GH.fgMuted,
+            gap: '10px',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            backgroundColor: GH.accentSubtle,
+            border: `1px solid ${GH.accentEmphasis}33`,
+            animation: 'composing-fade-in 100ms ease-out',
           }}>
-            <span>Composing</span>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: GH.accentFg,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              flexShrink: 0,
+            }}>
+              <StatusDot active />
+              Composing
+            </span>
+
             <Key k={ime.romanBuffer} />
-            <span style={{ color: GH.fgSubtle }}>→</span>
+
+            <span style={{ color: GH.fgSubtle, fontSize: '14px', flexShrink: 0 }}>→</span>
+
             <span style={{
               fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: '18px',
-              color: GH.accentFg,
+              fontSize: '20px',
+              fontWeight: 500,
+              color: GH.fgDefault,
+              wordBreak: 'break-all',
             }}>
               {transliterate(ime.romanBuffer)}
+              <span style={{
+                display: 'inline-block',
+                width: '2px',
+                height: '1.1em',
+                marginLeft: '2px',
+                verticalAlign: 'text-bottom',
+                backgroundColor: GH.accentFg,
+                animation: 'composing-caret 1s step-end infinite',
+              }} />
             </span>
           </div>
         )}
@@ -583,31 +762,44 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
       </div>
 
       {/* ── Divider ── */}
-      <div style={s.divider} />
+      <div style={{ ...s.divider, flexShrink: 0 }} />
 
-      {/* ── Output ── */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Devanagari output</span>
+      {/* ── Output — flexes to fill all remaining height ── */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
+          <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Devanagari paragraph</span>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <CopyBtn text={ime.value} />
-            <Btn variant="danger" onClick={ime.reset} disabled={!ime.value} title="Clear all text">
+            <CopyBtn text={paragraph} />
+            <Btn variant="danger" onClick={resetAll} disabled={!paragraph && !ime.romanBuffer} title="Clear all text">
               <IcoTrash /> Clear
             </Btn>
           </div>
         </div>
 
-        <div
+        {/*
+          A plain, independent textarea: Backspace/typing here is native
+          browser behaviour and only ever touches THIS box. It is populated
+          by committed words from Roman input (via onCommit) but has no
+          other link back to it — Backspace in Roman input can never reach
+          text that has landed here.
+        */}
+        <textarea
+          value={paragraph}
+          onChange={e => setParagraph(e.target.value)}
+          placeholder="Output appears here as you commit words (Space/Enter) — or type directly…"
+          spellCheck={false}
           style={{
             ...s.output,
-            color: ime.value ? GH.fgDefault : GH.fgSubtle,
-            fontStyle: ime.value ? 'normal' : 'italic',
+            width: '100%',
+            flex: 1,
+            minHeight: 0,
+            resize: 'none',
+            outline: 'none',
+            boxSizing: 'border-box',
+            fontStyle: paragraph ? 'normal' : 'italic',
           }}
-          aria-label="Transliterated Devanagari output"
-          aria-live="polite"
-        >
-          {ime.value || 'Output appears here as you type…'}
-        </div>
+          aria-label="Devanagari paragraph output"
+        />
       </div>
 
       {/* ── Status bar ── */}
@@ -619,20 +811,10 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
         flexWrap: 'wrap',
         paddingTop: '4px',
         borderTop: `1px solid ${GH.borderMuted}`,
+        flexShrink: 0,
       }}>
         <span><span style={{ color: GH.fgMuted }}>{charCount}</span> chars</span>
         <span><span style={{ color: GH.fgMuted }}>{lineCount}</span> lines</span>
-        <span style={{ marginLeft: 'auto', color: GH.fgSubtle }}>
-          Pramukh IME-compatible ·{' '}
-          <a
-            href="https://pramukhime.com/help/bodo-typing-help"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: GH.accentFg, textDecoration: 'none' }}
-          >
-            Docs ↗
-          </a>
-        </span>
       </div>
     </div>
   );
@@ -651,26 +833,29 @@ function ReferencePanel() {
   ];
 
   return (
-    <div>
-      <Tabs tabs={tabs} active={tab} onChange={setTab} />
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <div style={{ flexShrink: 0 }}>
+        <Tabs tabs={tabs} active={tab} onChange={setTab} />
+      </div>
 
-      <div style={{ overflowY: 'auto', maxHeight: '520px' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {tab === 'vowels' && (
           <>
             <p style={{ margin: '10px 0 8px', fontSize: '14px', color: GH.fgMuted }}>
-              <Key k="o" /> is the inherent vowel (अ). After a consonant it emits no mātrā sign —
-              the consonant's inherent /a/ is implied.
+              Bodo Devanagari vowels — independent form, dependent diacritic (mātrā) form,
+              Roman transcription, and IPA. Reference chart, from{' '}
+              <code style={s.code}>bodo_deva.md</code>.
             </p>
-            <RefTable rows={VOWEL_REF} />
+            <ChartTable rows={VOWEL_REF} showDiacritic />
           </>
         )}
         {tab === 'consonants' && (
           <>
             <p style={{ margin: '10px 0 8px', fontSize: '14px', color: GH.fgMuted }}>
-              Bodo uses an <strong style={{ color: GH.fgDefault }}>aspirated-first</strong> system —
-              <Key k="k" /> → ख (aspirated), not क. Note: capital <Key k="I" /> = य, <Key k="O" /> = व.
+              Bodo Devanagari consonants — with Roman transcription and IPA. Reference chart,
+              from <code style={s.code}>bodo_deva.md</code>.
             </p>
-            <RefTable rows={CONSONANT_REF} />
+            <ChartTable rows={CONSONANT_REF} />
           </>
         )}
         {tab === 'special' && (
@@ -695,7 +880,7 @@ function ReferencePanel() {
               </thead>
               <tbody>
                 {EXAMPLES.map((ex, i) => (
-                  <tr key={i} style={{ backgroundColor: i % 2 === 1 ? '#0d111766' : 'transparent' }}>
+                  <tr key={i} style={{ backgroundColor: i % 2 === 1 ? GH.rowStripe : 'transparent' }}>
                     <td style={s.td}><Key k={ex.roman} /></td>
                     <td style={{
                       ...s.td,
@@ -717,9 +902,9 @@ function ReferencePanel() {
   );
 }
 
-// ─── Shortcuts bar ────────────────────────────────────────────────────────────
+// ─── Bottom bar (shortcuts + footer, merged into one slim strip) ───────────────
 
-function ShortcutsBar() {
+function BottomBar() {
   const items = [
     { key: 'F9',        label: 'Toggle IME' },
     { key: 'Space',     label: 'Commit word' },
@@ -731,13 +916,15 @@ function ShortcutsBar() {
 
   return (
     <div style={{
-      ...s.card({
-        padding: '10px 16px',
-        display: 'flex',
-        gap: '0',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-      }),
+      flexShrink: 0,
+      borderTop: `1px solid ${GH.borderMuted}`,
+      backgroundColor: GH.canvasSubtle,
+      padding: '10px clamp(16px, 3vw, 40px)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '20px',
+      flexWrap: 'wrap',
+      fontSize: '13px',
     }}>
       <span style={{
         fontSize: '13px',
@@ -745,108 +932,25 @@ function ShortcutsBar() {
         color: GH.fgSubtle,
         textTransform: 'uppercase',
         letterSpacing: '0.06em',
-        marginRight: '16px',
         flexShrink: 0,
       }}>
         Shortcuts
       </span>
-      {items.map((item, i) => (
-        <span key={i} style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '5px',
-          fontSize: '14px',
-          color: GH.fgMuted,
-          marginRight: '20px',
-          padding: '2px 0',
-        }}>
-          <Key k={item.key} />
-          <span>{item.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-// ─── Root ─────────────────────────────────────────────────────────────────────
-
-export default function App() {
-  const [imeActive, setImeActive] = useState(true);
-
-  const toggleIme = useCallback(() => setImeActive(v => !v), []);
-
-  return (
-    <div style={s.page}>
-      <Header imeActive={imeActive} onToggleIme={toggleIme} />
-
-      {/* Main two-column grid */}
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '24px 16px',
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 0.9fr)',
-        gap: '16px',
-        alignItems: 'start',
-      }}>
-
-        {/* Left — Transliterator */}
-        <div style={s.card({ padding: '20px' })}>
-          <div style={{
-            display: 'flex',
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', flex: 1 }}>
+        {items.map((item, i) => (
+          <span key={i} style={{
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px',
-            marginBottom: '4px',
+            gap: '5px',
+            fontSize: '14px',
+            color: GH.fgMuted,
           }}>
-            <IcoKeyboard />
-            <h2 style={s.h2}>Transliterator</h2>
-            <div style={{ flex: 1 }} />
-            <span style={s.label(GH.successFg, GH.successSubtle, 'transparent')}>
-              <StatusDot active /> Live
-            </span>
-          </div>
-          <div style={s.divider} />
-          <EditorPanel imeActive={imeActive} onToggleIme={toggleIme} />
-        </div>
-
-        {/* Right — Reference */}
-        <div style={s.card({ padding: '20px' })}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '4px',
-          }}>
-            <IcoBook />
-            <h2 style={s.h2}>Key Reference</h2>
-          </div>
-          <div style={s.divider} />
-          <ReferencePanel />
-        </div>
+            <Key k={item.key} />
+            <span>{item.label}</span>
+          </span>
+        ))}
       </div>
-
-      {/* Shortcuts */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px 24px' }}>
-        <ShortcutsBar />
-      </div>
-
-      {/* Footer */}
-      <footer style={{
-        borderTop: `1px solid ${GH.borderMuted}`,
-        padding: '16px',
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '24px',
-        fontSize: '13px',
-        color: GH.fgSubtle,
-        flexWrap: 'wrap',
-      }}>
-        <span>Bodo Typewriter</span>
-        <span style={{ color: GH.borderDefault }}>·</span>
-        <span>Pramukh IME-compatible</span>
-        <span style={{ color: GH.borderDefault }}>·</span>
-        <span>React + TypeScript + Vite</span>
-        <span style={{ color: GH.borderDefault }}>·</span>
+      <span style={{ color: GH.fgSubtle, whiteSpace: 'nowrap' }}>
         <a
           href="https://github.com"
           target="_blank"
@@ -855,7 +959,68 @@ export default function App() {
         >
           Open source ↗
         </a>
-      </footer>
+      </span>
+    </div>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+
+function getInitialTheme(): Theme {
+  try {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+  } catch {
+    // localStorage unavailable (private mode, etc.) — fall through
+  }
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches
+    ? 'light'
+    : 'dark';
+}
+
+export default function App() {
+  const [imeActive, setImeActive] = useState(true);
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+
+  const toggleIme = useCallback(() => setImeActive(v => !v), []);
+  const toggleTheme = useCallback(() => setTheme(t => (t === 'dark' ? 'light' : 'dark')), []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // localStorage unavailable — theme just won't persist across reloads
+    }
+  }, [theme]);
+
+  return (
+    <div className="app-shell" style={s.page}>
+      <Header imeActive={imeActive} onToggleIme={toggleIme} theme={theme} onToggleTheme={toggleTheme} />
+
+      {/* Fluid two-column grid — fills the full viewport width/height;
+          collapses to a single scrolling column below 860px (index.css). */}
+      <div className="main-grid" style={s.mainGrid}>
+        <div className="panel-card" style={s.card({ ...s.panelCard, padding: '20px' })}>
+          <PanelHeader
+            icon={<IcoKeyboard />}
+            title="Transliterator"
+            right={
+              <span style={s.label(GH.successFg, GH.successSubtle, 'transparent')}>
+                <StatusDot active /> Live
+              </span>
+            }
+          />
+          <EditorPanel imeActive={imeActive} onToggleIme={toggleIme} />
+        </div>
+
+        <div className="panel-card" style={s.card({ ...s.panelCard, padding: '20px' })}>
+          <PanelHeader icon={<IcoBook />} title="Script Reference" />
+          <ReferencePanel />
+        </div>
+      </div>
+
+      <BottomBar />
     </div>
   );
 }

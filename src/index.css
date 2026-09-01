@@ -1,4 +1,74 @@
 @import "tailwindcss";
 
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; }
+html, body { margin: 0; height: 100%; }
+
+/* ─── Theme tokens ──────────────────────────────────────────────────────── */
+/* Dark is the default (matches the app's original look); [data-theme="light"]
+   overrides it. Both are GitHub Primer palette values. */
+:root {
+  --gh-canvas-default:  #0d1117;
+  --gh-canvas-subtle:   #161b22;
+  --gh-canvas-inset:    #010409;
+  --gh-border-default:  #30363d;
+  --gh-border-muted:    #21262d;
+  --gh-fg-default:      #e6edf3;
+  --gh-fg-muted:        #7d8590;
+  --gh-fg-subtle:       #6e7681;
+  --gh-accent-fg:       #2f81f7;
+  --gh-accent-emphasis: #1f6feb;
+  --gh-accent-subtle:   #121d2f;
+  --gh-success-fg:      #3fb950;
+  --gh-success-subtle:  #0f2d1a;
+  --gh-attention-fg:    #d29922;
+  --gh-danger-fg:       #f85149;
+  --gh-danger-subtle:   #2d0f0e;
+  --gh-hover-bg:        #21262d;
+  --gh-hover-border:    #8b949e;
+  --gh-row-stripe:      #0d111766;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --gh-canvas-default:  #ffffff;
+  --gh-canvas-subtle:   #f6f8fa;
+  --gh-canvas-inset:    #eaeef2;
+  --gh-border-default:  #d0d7de;
+  --gh-border-muted:    #d8dee4;
+  --gh-fg-default:      #1f2328;
+  --gh-fg-muted:        #59636e;
+  --gh-fg-subtle:       #6e7781;
+  --gh-accent-fg:       #0969da;
+  --gh-accent-emphasis: #0969da;
+  --gh-accent-subtle:   #ddf4ff;
+  --gh-success-fg:      #1a7f37;
+  --gh-success-subtle:  #dafbe1;
+  --gh-attention-fg:    #9a6700;
+  --gh-danger-fg:       #d1242f;
+  --gh-danger-subtle:   #ffebe9;
+  --gh-hover-bg:        #eaeef2;
+  --gh-hover-border:    #8c959f;
+  --gh-row-stripe:      #eaeef280;
+  color-scheme: light;
+}
+
+/* ─── App shell ─────────────────────────────────────────────────────────── */
+/* Full-viewport layout on desktop; on narrow screens fall back to a normal
+   scrolling page with the two panels stacked. */
+.app-shell { overflow: hidden; }
+
+@media (max-width: 860px) {
+  .app-shell { height: auto; min-height: 100dvh; overflow: visible; }
+  .main-grid { grid-template-columns: 1fr !important; }
+  .panel-card { min-height: 60vh; }
+}
+
+@keyframes composing-fade-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes composing-caret {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}

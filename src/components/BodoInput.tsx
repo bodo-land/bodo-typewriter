@@ -46,7 +46,17 @@ export const BodoInput: React.FC<BodoInputProps> = ({
   autoFocus = false,
 }) => {
   const ref = useRef<HTMLTextAreaElement>(null);
-  const { value, romanBuffer, handleKeyDown, reset } = useBodoIME(defaultValue);
+  // Finished words live here, fully independent of the composing buffer —
+  // Backspace in the composing buffer can never reach back into this.
+  const [committed, setCommitted] = useState(() => defaultValue.normalize('NFC'));
+  const { romanBuffer, handleKeyDown, reset: resetBuffer } = useBodoIME({
+    onCommit: text => setCommitted(c => c + text),
+  });
+  const value = committed + transliterate(romanBuffer);
+  const reset = useCallback(() => {
+    setCommitted('');
+    resetBuffer();
+  }, [resetBuffer]);
   const [imeActive, setImeActive] = useState(true);
 
   // Sync controlled value → internal state (reset + seed committed)
