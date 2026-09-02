@@ -33,8 +33,10 @@ export type SessionManager = {
   setParagraph: (value: string) => void;
   setRomanParagraph: (value: string) => void;
   history: Session[];
-  /** Briefly true right after an autosave completes — drives a "Saved" indicator. */
+  /** Briefly true right after a save completes (auto or manual) — drives a "Saved" indicator. */
   justSaved: boolean;
+  /** Saves the current session to localStorage immediately, skipping the autosave debounce. */
+  saveNow: () => void;
   startNewSession: () => void;
   restoreSession: (id: string) => void;
   deleteSession: (id: string) => void;
@@ -62,30 +64,32 @@ export function useSessionManager(): SessionManager {
   const mounted = useRef(false);
   const flashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const persistNow = useCallback(() => {
+    saveCurrentSession({
+      id: 'current',
+      paragraph,
+      romanParagraph,
+      romanBuffer: ime.romanBuffer,
+      savedAt: Date.now(),
+    });
+    setJustSaved(true);
+    if (flashTimeout.current) clearTimeout(flashTimeout.current);
+    flashTimeout.current = setTimeout(() => setJustSaved(false), 1500);
+  }, [paragraph, romanParagraph, ime.romanBuffer]);
+
   useEffect(() => {
     if (!mounted.current) {
       mounted.current = true;
       return;
     }
 
-    const saveTimeout = setTimeout(() => {
-      saveCurrentSession({
-        id: 'current',
-        paragraph,
-        romanParagraph,
-        romanBuffer: ime.romanBuffer,
-        savedAt: Date.now(),
-      });
-      setJustSaved(true);
-      if (flashTimeout.current) clearTimeout(flashTimeout.current);
-      flashTimeout.current = setTimeout(() => setJustSaved(false), 1500);
-    }, 400);
+    const saveTimeout = setTimeout(persistNow, 400);
 
     return () => {
       clearTimeout(saveTimeout);
       if (flashTimeout.current) clearTimeout(flashTimeout.current);
     };
-  }, [paragraph, romanParagraph, ime.romanBuffer]);
+  }, [persistNow]);
 
   const startNewSession = useCallback(() => {
     const snapshot: Session = {
@@ -142,6 +146,7 @@ export function useSessionManager(): SessionManager {
     setRomanParagraph,
     history,
     justSaved,
+    saveNow: persistNow,
     startNewSession,
     restoreSession,
     deleteSession,

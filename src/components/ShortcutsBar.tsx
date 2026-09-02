@@ -1,9 +1,17 @@
 import { GH } from '../styles/theme';
 import { Key } from './Key';
+import { Btn } from './Btn';
+import { IcoBook } from './icons';
 
 // Keyboard shortcuts reference + footer link, in one slim strip pinned to
 // the top of the app (right below the header) so it's always visible.
-export function ShortcutsBar() {
+export function ShortcutsBar({
+  referenceOpen,
+  onToggleReference,
+}: {
+  referenceOpen: boolean;
+  onToggleReference: () => void;
+}) {
   const items = [
     { key: 'F9',        label: 'Toggle IME' },
     { key: 'Space',     label: 'Commit word' },
@@ -49,6 +57,13 @@ export function ShortcutsBar() {
           </span>
         ))}
       </div>
+      <Btn
+        variant={referenceOpen ? 'primary' : 'secondary'}
+        onClick={onToggleReference}
+        title={referenceOpen ? 'Hide Script Reference' : 'Show Script Reference'}
+      >
+        <IcoBook /> Script Reference
+      </Btn>
       <span style={{ color: GH.fgSubtle, whiteSpace: 'nowrap' }}>
         <a
           href="https://github.com"

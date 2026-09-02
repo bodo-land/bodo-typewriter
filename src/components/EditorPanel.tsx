@@ -1,13 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import type { IMEState } from '../hooks/useBodoIME';
 import { transliterate } from '../engine/transliterator';
-import { getSuggestionSections, applySuggestionToBuffer } from '../utils/suggestions';
 import { GH, s } from '../styles/theme';
 import { Btn, CopyBtn, DownloadBtn } from './Btn';
 import { Key } from './Key';
 import { StatusDot } from './StatusDot';
-import { Suggestions } from './Suggestions';
-import { IcoTrash, IcoCheck, IcoX } from './icons';
+import { IcoTrash, IcoCheck, IcoSave, IcoX } from './icons';
 
 const TIP_DISMISSED_KEY = 'bodo-typewriter:tip-dismissed';
 
@@ -20,6 +18,7 @@ export function EditorPanel({
   setParagraph,
   setRomanParagraph,
   onClear,
+  onSave,
   justSaved,
 }: {
   imeActive: boolean;
@@ -30,6 +29,7 @@ export function EditorPanel({
   setParagraph: (value: string) => void;
   setRomanParagraph: (value: string) => void;
   onClear: () => void;
+  onSave: () => void;
   justSaved: boolean;
 }) {
   const [focused, setFocused] = useState(false);
@@ -64,13 +64,6 @@ export function EditorPanel({
     onClear();
     setPlainRoman('');
   }, [onClear]);
-
-  const suggestionSections = useMemo(() => getSuggestionSections(ime.romanBuffer), [ime.romanBuffer]);
-
-  const applySuggestion = useCallback((segmentIndex: number, roman: string) => {
-    ime.setRoman(applySuggestionToBuffer(ime.romanBuffer, segmentIndex, roman));
-    ime.ref.current?.focus();
-  }, [ime]);
 
   const charCount = [...paragraph].length;
   const lineCount = paragraph ? paragraph.split('\n').length : 0;
@@ -114,14 +107,8 @@ export function EditorPanel({
         </div>
       )}
 
-      {/*
-        Roman input row: the input itself on the left, and — only while
-        there's something to show — a vertical "did you mean" rail on the
-        right. The rail lives here, inside the Transliterator card (see
-        its own comment below), not as a real third grid column.
-      */}
-      <div className="roman-input-row" style={{ display: 'flex', gap: '16px', flexShrink: 0, alignItems: 'flex-start' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flexShrink: 0 }}>
+        <div>
           <span style={s.sectionLabel}>Roman input</span>
           <textarea
             ref={imeActive ? ime.ref : undefined}
@@ -212,27 +199,6 @@ export function EditorPanel({
             </div>
           )}
         </div>
-
-        {/*
-          Vertical suggestions rail — visually reads as if it sits between
-          the Transliterator and Script Reference cards (it hugs this
-          card's right edge, right where the gap to Script Reference
-          begins), but it's structurally just the right side of this same
-          flex row — still fully inside the Transliterator card's own
-          border, not a real third column.
-        */}
-        {imeActive && suggestionSections.length > 0 && (
-          <div className="suggestions-rail" style={{
-            width: '200px',
-            flexShrink: 0,
-            maxHeight: '220px',
-            overflowY: 'auto',
-            paddingLeft: '16px',
-            borderLeft: `1px solid ${GH.borderMuted}`,
-          }}>
-            <Suggestions sections={suggestionSections} onApply={applySuggestion} />
-          </div>
-        )}
       </div>
 
       {/* ── Divider ── */}
@@ -340,17 +306,21 @@ export function EditorPanel({
       }}>
         <span><span style={{ color: GH.fgMuted }}>{charCount}</span> chars</span>
         <span><span style={{ color: GH.fgMuted }}>{lineCount}</span> lines</span>
-        <span style={{
-          marginLeft: 'auto',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          color: GH.successFg,
-          opacity: justSaved ? 1 : 0,
-          transition: 'opacity 300ms',
-        }}>
-          <IcoCheck /> Saved
-        </span>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            color: GH.successFg,
+            opacity: justSaved ? 1 : 0,
+            transition: 'opacity 300ms',
+          }}>
+            <IcoCheck /> Saved
+          </span>
+          <Btn variant="secondary" onClick={onSave} title="Save current session now">
+            <IcoSave /> Save
+          </Btn>
+        </div>
       </div>
     </div>
   );
