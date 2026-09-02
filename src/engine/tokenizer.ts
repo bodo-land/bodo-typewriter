@@ -50,7 +50,9 @@ function newNode(): TrieNode {
 
 function buildTrie(entries: Entry[]): TrieNode {
   // Guard against duplicate keys across mapping tables in development (ENG-008).
-  if (import.meta.env.DEV) {
+  // Optional chaining: import.meta.env only exists under Vite/Vitest, not
+  // when this module is imported by a plain Node script (e.g. tests/convert.ts).
+  if (import.meta.env?.DEV) {
     const seen = new Map<string, TokenKind>();
     for (const { key, kind } of entries) {
       if (seen.has(key)) {
