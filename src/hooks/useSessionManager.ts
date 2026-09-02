@@ -36,6 +36,8 @@ export type SessionManager = {
   /** User-given name for the current session, or '' for untitled. */
   currentTitle: string;
   renameCurrentSession: (title: string) => void;
+  /** When the current session was last written to localStorage. */
+  currentSavedAt: number;
   history: Session[];
   /** Renames an archived session by id. */
   renameSession: (id: string, title: string) => void;
@@ -58,6 +60,7 @@ export function useSessionManager(): SessionManager {
   const [paragraph, setParagraph] = useState(() => savedSession?.paragraph ?? '');
   const [romanParagraph, setRomanParagraph] = useState(() => savedSession?.romanParagraph ?? '');
   const [currentTitle, setCurrentTitle] = useState(() => savedSession?.title ?? '');
+  const [currentSavedAt, setCurrentSavedAt] = useState(() => savedSession?.savedAt ?? Date.now());
   const ime = useBodoIME({
     initialRoman: savedSession?.romanBuffer,
     onCommit: (unicodeText, romanText) => {
@@ -74,14 +77,16 @@ export function useSessionManager(): SessionManager {
   const flashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const persistNow = useCallback(() => {
+    const savedAt = Date.now();
     saveCurrentSession({
       id: 'current',
       paragraph,
       romanParagraph,
       romanBuffer: ime.romanBuffer,
-      savedAt: Date.now(),
+      savedAt,
       title: currentTitle || undefined,
     });
+    setCurrentSavedAt(savedAt);
     setJustSaved(true);
     if (flashTimeout.current) clearTimeout(flashTimeout.current);
     flashTimeout.current = setTimeout(() => setJustSaved(false), 1500);
@@ -119,7 +124,9 @@ export function useSessionManager(): SessionManager {
     setParagraph('');
     setRomanParagraph('');
     setCurrentTitle('');
-    saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt: Date.now() });
+    const savedAt = Date.now();
+    setCurrentSavedAt(savedAt);
+    saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt });
   }, [paragraph, romanParagraph, ime, history, currentTitle]);
 
   const deleteCurrentSession = useCallback(() => {
@@ -127,7 +134,9 @@ export function useSessionManager(): SessionManager {
     setParagraph('');
     setRomanParagraph('');
     setCurrentTitle('');
-    saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt: Date.now() });
+    const savedAt = Date.now();
+    setCurrentSavedAt(savedAt);
+    saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt });
   }, [ime]);
 
   const restoreSession = useCallback((id: string) => {
@@ -151,7 +160,9 @@ export function useSessionManager(): SessionManager {
     setRomanParagraph(target.romanParagraph);
     setCurrentTitle(target.title ?? '');
     ime.setRoman(target.romanBuffer);
-    saveCurrentSession({ ...target, id: 'current', savedAt: Date.now() });
+    const savedAt = Date.now();
+    setCurrentSavedAt(savedAt);
+    saveCurrentSession({ ...target, id: 'current', savedAt });
   }, [paragraph, romanParagraph, ime, history, currentTitle]);
 
   const deleteSession = useCallback((id: string) => {
@@ -176,6 +187,7 @@ export function useSessionManager(): SessionManager {
     setRomanParagraph,
     currentTitle,
     renameCurrentSession: setCurrentTitle,
+    currentSavedAt,
     history,
     renameSession,
     justSaved,

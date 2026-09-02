@@ -20,11 +20,16 @@ import { MAX_HISTORY, type Session } from '../utils/sessionStorage';
  * with a backdrop instead of an inline column — `onClose` is only used
  * there (the backdrop is invisible and un-clickable on wide screens).
  */
+const CURRENT_TIMESTAMP_FORMAT = new Intl.DateTimeFormat(undefined, {
+  month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit',
+});
+
 export function Sidebar({
   history,
   currentRoman,
   currentDevanagari,
   currentTitle,
+  currentSavedAt,
   onRenameCurrent,
   onNewSession,
   onRestore,
@@ -37,6 +42,7 @@ export function Sidebar({
   currentRoman: string;
   currentDevanagari: string;
   currentTitle: string;
+  currentSavedAt: number;
   onRenameCurrent: (title: string) => void;
   onNewSession: () => void;
   onRestore: (id: string) => void;
@@ -53,12 +59,16 @@ export function Sidebar({
     <>
       <div className="sidebar-backdrop" onClick={onClose} />
       <aside className="sidebar" style={{
-        width: '260px',
-        flexShrink: 0,
+        // Weight 20 alongside main-grid (65) and ConsonantKeyRail (15) in
+        // the shared contentRow flex row — a 20/65/15 split.
+        flex: '20 1 0%',
+        minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
         minHeight: 0,
-        borderRight: `1px solid ${GH.borderDefault}`,
+        border: `1px solid ${GH.borderDefault}`,
+        borderRadius: '6px',
+        overflow: 'hidden',
         backgroundColor: GH.canvasSubtle,
       }}>
         <div style={{
@@ -84,7 +94,7 @@ export function Sidebar({
             {history.length}/{MAX_HISTORY}
           </span>
           <Btn variant="secondary" onClick={onNewSession} title="Archive the current session and start a blank one">
-            <IcoPlus />
+            <IcoPlus /> New
           </Btn>
         </div>
 
@@ -121,7 +131,10 @@ export function Sidebar({
                   borderRadius: '50%',
                   backgroundColor: GH.accentFg,
                 }} />
-                Current
+                Current Session
+              </div>
+              <div style={{ fontSize: 'var(--fs-11)', color: GH.fgSubtle, marginBottom: '4px' }}>
+                {CURRENT_TIMESTAMP_FORMAT.format(currentSavedAt)}
               </div>
 
               {renamingCurrent ? (
@@ -217,7 +230,7 @@ export function Sidebar({
 
           {history.length === 0 ? (
             <div style={{ padding: '14px 10px', fontSize: 'var(--fs-13)', color: GH.fgSubtle, textAlign: 'center' }}>
-              No saved sessions yet — the + button archives the current one here.
+              No saved sessions yet — start typing to save your sessions.
             </div>
           ) : (
             history.map(sess => (
@@ -230,6 +243,28 @@ export function Sidebar({
               />
             ))
           )}
+        </div>
+
+        <div style={{
+          flexShrink: 0,
+          padding: '10px 14px',
+          borderTop: `1px solid ${GH.borderMuted}`,
+          fontSize: 'var(--fs-11)',
+          color: GH.fgSubtle,
+          lineHeight: 1.5,
+        }}>
+          <div>© {new Date().getFullYear()} Bodo Typewriter</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+            <span>All rights reserved</span>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: GH.accentFg, textDecoration: 'none', whiteSpace: 'nowrap' }}
+            >
+              Open source ↗
+            </a>
+          </div>
         </div>
       </aside>
     </>

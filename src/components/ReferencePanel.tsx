@@ -1,26 +1,41 @@
-import { useState } from 'react';
-import { GH, s } from '../styles/theme';
+import { GH } from '../styles/theme';
 import { Tabs } from './Tabs';
-import { RefTable } from './RefTable';
 import { ChartTable } from './ChartTable';
-import { Key } from './Key';
-import { IcoBook, IcoKeyboard, IcoLightning, IcoCheck } from './icons';
-import { VOWEL_REF, CONSONANT_REF, SPECIAL_REF, EXAMPLES } from '../data/referenceData';
+import { ConsonantKeyRail } from './ConsonantKeyRail';
+import { Suggestions } from './Suggestions';
+import { IcoBook, IcoKeyboard, IcoPencil } from './icons';
+import { VOWEL_REF } from '../data/referenceData';
+import type { SuggestionSection } from '../utils/suggestions';
 
-export function ReferencePanel() {
-  const [tab, setTab] = useState('vowels');
-
+/**
+ * The single right-hand panel — every reference/utility view lives here as
+ * a tab, instead of each view being its own separately-shown card. Only
+ * Did You Mean / Vowels / Consonants for now (Special/Examples parked,
+ * not deleted — easy to re-add as more tabs.push(...) entries later).
+ * Tab state is controlled by App (rather than local) so it can be
+ * reset/driven from elsewhere later if needed.
+ */
+export function ReferencePanel({
+  tab,
+  onTabChange,
+  suggestionSections,
+  onApplySuggestion,
+}: {
+  tab: string;
+  onTabChange: (id: string) => void;
+  suggestionSections: SuggestionSection[];
+  onApplySuggestion: (segmentIndex: number, roman: string) => void;
+}) {
   const tabs = [
-    { id: 'vowels',     label: 'Vowels',     icon: <IcoBook /> },
-    { id: 'consonants', label: 'Consonants', icon: <IcoKeyboard /> },
-    { id: 'special',    label: 'Special',    icon: <IcoLightning /> },
-    { id: 'examples',   label: 'Examples',   icon: <IcoCheck /> },
+    { id: 'suggestions', label: 'Did You Mean', icon: <IcoPencil /> },
+    { id: 'vowels',      label: 'Vowels',       icon: <IcoBook /> },
+    { id: 'consonants',  label: 'Consonants',   icon: <IcoKeyboard /> },
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <div style={{ flexShrink: 0 }}>
-        <Tabs tabs={tabs} active={tab} onChange={setTab} />
+        <Tabs tabs={tabs} active={tab} onChange={onTabChange} />
       </div>
 
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
@@ -33,52 +48,17 @@ export function ReferencePanel() {
             <ChartTable rows={VOWEL_REF} showDiacritic />
           </>
         )}
-        {tab === 'consonants' && (
-          <>
-            <p style={{ margin: '10px 0 8px', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
-              Bodo Devanagari consonants — with Roman transcription.
+        {tab === 'consonants' && <ConsonantKeyRail />}
+        {tab === 'suggestions' && (
+          suggestionSections.length > 0 ? (
+            <div style={{ paddingTop: '8px' }}>
+              <Suggestions sections={suggestionSections} onApply={onApplySuggestion} />
+            </div>
+          ) : (
+            <p style={{ margin: '10px 0', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
+              Nothing to suggest right now — keep typing.
             </p>
-            <ChartTable rows={CONSONANT_REF} />
-          </>
-        )}
-        {tab === 'special' && (
-          <>
-            <p style={{ margin: '10px 0 8px', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
-              Special characters and the <strong style={{ color: GH.fgDefault }}>ng rule</strong>:{' '}
-              <Key k="ng" /> before a vowel → anusvara + ग + mātrā; before consonant/end → anusvara only.
-              Two consonants with no vowel automatically insert halant (् ).
-            </p>
-            <RefTable rows={SPECIAL_REF} />
-          </>
-        )}
-        {tab === 'examples' && (
-          <div style={{ paddingTop: '8px' }}>
-            <table style={s.table}>
-              <thead>
-                <tr>
-                  <th style={s.th}>Type</th>
-                  <th style={s.th}>Output</th>
-                  <th style={s.th}>Meaning</th>
-                </tr>
-              </thead>
-              <tbody>
-                {EXAMPLES.map((ex, i) => (
-                  <tr key={i} style={{ backgroundColor: i % 2 === 1 ? GH.rowStripe : 'transparent' }}>
-                    <td style={s.td}><Key k={ex.roman} /></td>
-                    <td style={{
-                      ...s.td,
-                      fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-                      fontSize: 'var(--fs-18)',
-                      color: GH.accentFg,
-                    }}>
-                      {ex.devanagari}
-                    </td>
-                    <td style={{ ...s.td, color: GH.fgMuted }}>{ex.meaning}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          )
         )}
       </div>
     </div>

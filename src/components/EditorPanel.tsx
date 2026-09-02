@@ -5,9 +5,11 @@ import { GH, s } from '../styles/theme';
 import { Btn, CopyBtn, DownloadBtn } from './Btn';
 import { Key } from './Key';
 import { StatusDot } from './StatusDot';
+import { LineNumberedTextarea } from './LineNumberedTextarea';
 import { IcoTrash, IcoCheck, IcoSave, IcoX } from './icons';
 
 const TIP_DISMISSED_KEY = 'bodo-typewriter:tip-dismissed';
+const ROMAN_INPUT_MAX = 5000;
 
 export function EditorPanel({
   imeActive,
@@ -32,7 +34,6 @@ export function EditorPanel({
   onSave: () => void;
   justSaved: boolean;
 }) {
-  const [focused, setFocused] = useState(false);
   const [plainRoman, setPlainRoman] = useState('');
   const [tipDismissed, setTipDismissed] = useState(() => {
     try {
@@ -65,8 +66,11 @@ export function EditorPanel({
     setPlainRoman('');
   }, [onClear]);
 
-  const charCount = [...paragraph].length;
-  const lineCount = paragraph ? paragraph.split('\n').length : 0;
+  const romanInputValue = imeActive ? ime.romanBuffer : plainRoman;
+  const romanChars = [...romanParagraph].length;
+  const romanLines = romanParagraph ? romanParagraph.split('\n').length : 0;
+  const devaChars = [...paragraph].length;
+  const devaLines = paragraph ? paragraph.split('\n').length : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0 }}>
@@ -108,97 +112,88 @@ export function EditorPanel({
       )}
 
       <div style={{ flexShrink: 0 }}>
-        <div>
-          <span style={s.sectionLabel}>Roman input</span>
-          <textarea
-            ref={imeActive ? ime.ref : undefined}
-            rows={4}
-            value={imeActive ? ime.romanBuffer : plainRoman}
-            onChange={e => { if (!imeActive) setPlainRoman(e.target.value); }}
-            onKeyDown={handleKeyDown}
-            onPaste={imeActive ? ime.handlePaste : undefined}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            placeholder={imeActive ? 'Type in Roman — e.g. bwdw → बोदो\nkhalam_dwng → खालामदों' : 'IME off — typing in English'}
-            spellCheck={false}
-            style={{
-              ...s.textarea,
-              backgroundColor: imeActive ? s.textarea.backgroundColor : `${GH.attentionFg}14`,
-              borderColor: focused ? GH.accentFg : imeActive ? GH.borderDefault : GH.attentionFg,
-              boxShadow: focused ? `0 0 0 3px ${GH.accentSubtle}` : 'none',
-              transition: 'border-color 80ms, box-shadow 80ms, background-color 80ms',
-            }}
-            aria-label="Roman transliteration input"
-          />
+        <span style={s.sectionLabel}>Roman input</span>
+        <LineNumberedTextarea
+          ref={imeActive ? ime.ref : undefined}
+          minHeight="110px"
+          value={romanInputValue}
+          onChange={e => { if (!imeActive) setPlainRoman(e.target.value); }}
+          onKeyDown={handleKeyDown}
+          onPaste={imeActive ? ime.handlePaste : undefined}
+          placeholder={imeActive ? 'Type in Roman — e.g. bwdw → बोदो\nkhalam_dwng → खालामदों' : 'IME off — typing in English'}
+          spellCheck={false}
+          maxLength={ROMAN_INPUT_MAX}
+          stats={`${romanInputValue.length} / ${ROMAN_INPUT_MAX}`}
+          aria-label="Roman transliteration input"
+        />
 
-          {/* Composing hint */}
-          {imeActive && ime.romanBuffer && (
-            <div style={{
-              marginTop: '8px',
-              display: 'flex',
+        {/* Composing hint */}
+        {imeActive && ime.romanBuffer && (
+          <div style={{
+            marginTop: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            backgroundColor: GH.accentSubtle,
+            border: `1px solid ${GH.accentEmphasis}33`,
+            animation: 'composing-fade-in 100ms ease-out',
+          }}>
+            <span style={{
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              backgroundColor: GH.accentSubtle,
-              border: `1px solid ${GH.accentEmphasis}33`,
-              animation: 'composing-fade-in 100ms ease-out',
-            }}>
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontSize: 'var(--fs-11)',
-                fontWeight: 600,
-                color: GH.accentFg,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                flexShrink: 0,
-              }}>
-                <StatusDot active />
-                Composing
-              </span>
-
-              <Key k={ime.romanBuffer} />
-
-              <span style={{ color: GH.fgSubtle, fontSize: 'var(--fs-14)', flexShrink: 0 }}>→</span>
-
-              <span style={{
-                fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-                fontSize: 'var(--fs-20)',
-                fontWeight: 500,
-                color: GH.fgDefault,
-                wordBreak: 'break-all',
-              }}>
-                {transliterate(ime.romanBuffer)}
-                <span style={{
-                  display: 'inline-block',
-                  width: '2px',
-                  height: '1.1em',
-                  marginLeft: '2px',
-                  verticalAlign: 'text-bottom',
-                  backgroundColor: GH.accentFg,
-                  animation: 'composing-caret 1s step-end infinite',
-                }} />
-              </span>
-            </div>
-          )}
-
-          {!imeActive && (
-            <div style={{
-              marginTop: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: 'var(--fs-14)',
+              gap: '5px',
+              fontSize: 'var(--fs-11)',
               fontWeight: 600,
-              color: GH.attentionFg,
+              color: GH.accentFg,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              flexShrink: 0,
             }}>
-              <span>⚠</span>
-              <span>IME off — press F9 or the keyboard button to re-enable transliteration</span>
-            </div>
-          )}
-        </div>
+              <StatusDot active />
+              Composing
+            </span>
+
+            <Key k={ime.romanBuffer} />
+
+            <span style={{ color: GH.fgSubtle, fontSize: 'var(--fs-14)', flexShrink: 0 }}>→</span>
+
+            <span style={{
+              fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
+              fontSize: 'var(--fs-20)',
+              fontWeight: 500,
+              color: GH.fgDefault,
+              wordBreak: 'break-all',
+            }}>
+              {transliterate(ime.romanBuffer)}
+              <span style={{
+                display: 'inline-block',
+                width: '2px',
+                height: '1.1em',
+                marginLeft: '2px',
+                verticalAlign: 'text-bottom',
+                backgroundColor: GH.accentFg,
+                animation: 'composing-caret 1s step-end infinite',
+              }} />
+            </span>
+          </div>
+        )}
+
+        {!imeActive && (
+          <div style={{
+            marginTop: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: 'var(--fs-14)',
+            fontWeight: 600,
+            color: GH.attentionFg,
+          }}>
+            <span>⚠</span>
+            <span>IME off — press F9 or the keyboard button to re-enable transliteration</span>
+          </div>
+        )}
       </div>
 
       {/* ── Divider ── */}
@@ -216,7 +211,6 @@ export function EditorPanel({
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
           <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Roman paragraph</span>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <DownloadBtn text={romanParagraph} filename="bodo-roman.txt" title="Download as .txt" />
             <CopyBtn text={romanParagraph} />
             <Btn
               variant="danger"
@@ -226,21 +220,17 @@ export function EditorPanel({
             >
               <IcoTrash /> Clear
             </Btn>
+            <DownloadBtn text={romanParagraph} filename="bodo-roman.txt" title="Download as .txt" />
           </div>
         </div>
 
-        <textarea
+        <LineNumberedTextarea
+          flex={1}
           value={romanParagraph}
           onChange={e => setRomanParagraph(e.target.value)}
           placeholder="Your raw Roman keystrokes accumulate here as you commit words (Space/Enter) — or type directly…"
           spellCheck={false}
-          style={{
-            ...s.textarea,
-            flex: 1,
-            minHeight: 0,
-            resize: 'none',
-            fontStyle: romanParagraph ? 'normal' : 'italic',
-          }}
+          stats={`${romanChars} chars • ${romanLines} line${romanLines === 1 ? '' : 's'}`}
           aria-label="Roman paragraph output"
         />
       </div>
@@ -253,7 +243,6 @@ export function EditorPanel({
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
           <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Devanagari paragraph</span>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <DownloadBtn text={paragraph} filename="bodo-devanagari.txt" title="Download as .txt" />
             <CopyBtn text={paragraph} />
             <Btn
               variant="danger"
@@ -263,6 +252,7 @@ export function EditorPanel({
             >
               <IcoTrash /> Clear
             </Btn>
+            <DownloadBtn text={paragraph} filename="bodo-devanagari.txt" title="Download as .txt" />
           </div>
         </div>
 
@@ -273,54 +263,42 @@ export function EditorPanel({
           other link back to it — Backspace in Roman input can never reach
           text that has landed here.
         */}
-        <textarea
+        <LineNumberedTextarea
+          flex={1}
           value={paragraph}
           onChange={e => setParagraph(e.target.value)}
           placeholder="Output appears here as you commit words (Space/Enter) — or type directly…"
           spellCheck={false}
-          style={{
-            ...s.output,
-            width: '100%',
-            flex: 1,
-            minHeight: 0,
-            resize: 'none',
-            outline: 'none',
-            boxSizing: 'border-box',
-            fontStyle: paragraph ? 'normal' : 'italic',
-          }}
+          fontFamily="'Noto Sans Devanagari', 'Mangal', serif"
+          fontSize="var(--fs-24)"
+          lineHeight="1.8"
+          stats={`${devaChars} chars • ${devaLines} line${devaLines === 1 ? '' : 's'}`}
           aria-label="Devanagari paragraph output"
         />
       </div>
 
-      {/* ── Status bar ── */}
+      {/* ── Save row ── */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
-        fontSize: 'var(--fs-13)',
-        color: GH.fgSubtle,
-        flexWrap: 'wrap',
-        paddingTop: '4px',
-        borderTop: `1px solid ${GH.borderMuted}`,
+        justifyContent: 'flex-end',
+        gap: '10px',
         flexShrink: 0,
       }}>
-        <span><span style={{ color: GH.fgMuted }}>{charCount}</span> chars</span>
-        <span><span style={{ color: GH.fgMuted }}>{lineCount}</span> lines</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            color: GH.successFg,
-            opacity: justSaved ? 1 : 0,
-            transition: 'opacity 300ms',
-          }}>
-            <IcoCheck /> Saved
-          </span>
-          <Btn variant="secondary" onClick={onSave} title="Save current session now">
-            <IcoSave /> Save
-          </Btn>
-        </div>
+        <span style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontSize: 'var(--fs-13)',
+          color: GH.successFg,
+          opacity: justSaved ? 1 : 0,
+          transition: 'opacity 300ms',
+        }}>
+          <IcoCheck /> Saved
+        </span>
+        <Btn variant="primary" onClick={onSave} title="Save current session now">
+          <IcoSave /> Save Session
+        </Btn>
       </div>
     </div>
   );

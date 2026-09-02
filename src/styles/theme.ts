@@ -61,21 +61,29 @@ export const s = {
     zIndex: 110,
   } as React.CSSProperties,
 
-  mainGrid: {
+  // The shared padded row holding Sidebar, the Transliterator/RightPanel
+  // grid, and ConsonantKeyRail as flex siblings — all three get the same
+  // outer margin and the same available height (flex default align-items:
+  // stretch), so their top/bottom edges line up exactly instead of each
+  // one inventing its own spacing.
+  contentRow: {
     flex: 1,
     minHeight: 0,
     width: '100%',
-    maxWidth: '2000px',
-    margin: '0 auto',
-    padding: '20px clamp(16px, 3vw, 40px)',
-    display: 'grid',
-    // Transliterator gets noticeably more room than before specifically so
-    // it has space to host its own vertical suggestions rail (see
-    // EditorPanel's "Roman input" row) without cramping the Roman input
-    // box — which has the effect of shifting Script Reference rightward.
-    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 0.6fr)',
+    padding: '20px clamp(16px, 2vw, 32px)',
+    display: 'flex',
     gap: '20px',
     boxSizing: 'border-box',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  mainGrid: {
+    // Weight 80 alongside Sidebar's 20 in contentRow — a 20/80 width split.
+    flex: 80,
+    minHeight: 0,
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 0.6fr)',
+    gap: '20px',
   } as React.CSSProperties,
 
   panelCard: {
