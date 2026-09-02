@@ -5,6 +5,7 @@ import { getSuggestionSections, applySuggestionToBuffer } from './utils/suggesti
 import { Header } from './components/Header';
 import { PanelHeader } from './components/PanelHeader';
 import { Sidebar } from './components/Sidebar';
+import { ConsonantKeyRail } from './components/ConsonantKeyRail';
 import { EditorPanel } from './components/EditorPanel';
 import { ReferencePanel } from './components/ReferencePanel';
 import { Suggestions } from './components/Suggestions';
@@ -159,6 +160,8 @@ export default function App() {
             </div>
           ) : null}
         </div>
+
+        <ConsonantKeyRail />
       </div>
     </div>
   );

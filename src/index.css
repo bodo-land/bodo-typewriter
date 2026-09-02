@@ -51,6 +51,12 @@ html, body { margin: 0; height: 100%; }
     --fs-20: 24px;
     --fs-24: 29px;
   }
+
+  /* Main content is capped at maxWidth 2000px and centered — at this
+     width there's genuine empty margin on both sides, so the always-on
+     consonant cheat sheet (ConsonantKeyRail) can live in the right one
+     without cramping anything. Hidden by default (see the component). */
+  .consonant-rail { display: flex !important; }
 }
 
 :root[data-theme="light"] {
