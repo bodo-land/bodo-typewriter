@@ -60,6 +60,11 @@ export type UseBodoIMEOptions = {
    * stores appends unicodeText to one and romanText to the other.
    */
   onCommit?: (unicodeText: string, romanText: string) => void;
+  /**
+   * Initial value for the composing buffer (e.g. restoring a saved session).
+   * Only read on first render, like a normal useState initializer.
+   */
+  initialRoman?: string;
 };
 
 export type IMEState = {
@@ -84,8 +89,8 @@ const COMMIT_CHARS = new Set([' ', 'Enter', '\n', '\r']);
 // Tab intentionally omitted — let the browser move focus normally (BUG-005).
 
 export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
-  const { onCommit } = options;
-  const [romanBuffer, setRomanBuffer] = useState('');
+  const { onCommit, initialRoman } = options;
+  const [romanBuffer, setRomanBuffer] = useState(() => initialRoman ?? '');
   const ref = useRef<HTMLTextAreaElement>(null);
   // Caret position to restore after a buffer edit — the textarea is
   // React-controlled, so setting .value alone would otherwise snap the
