@@ -33,6 +33,24 @@ function familyFor(key: string): string[] | undefined {
 const MAX_OPTIONS_PER_GROUP = 6;
 
 /**
+ * 'M' (and 'ng', same rule, though it isn't in any family today) aren't a
+ * simple 1-for-1 substitute the way the rest of the confusable keys are:
+ * per the ng context rule in transliterator.ts, immediately before a vowel
+ * they expand into anusvara + ग + that vowel's mark, not just their own
+ * character. So "ma" → "Ma" isn't really "the same word with one letter
+ * swapped", it's मा → ंगा — a structurally different result that reads as
+ * a broken suggestion rather than a helpful one. Away from a following
+ * vowel (word-end, before a consonant) 'M' is just anusvara and behaves
+ * like any other simple swap, e.g. "khalam" → "khalaM" (खालाम → खालां) is
+ * fine and stays offered.
+ */
+const CONTEXT_SENSITIVE_KEYS = new Set(['M', 'ng']);
+
+function isContextSensitiveBeforeVowel(key: string, nextToken: { kind: string } | undefined): boolean {
+  return CONTEXT_SENSITIVE_KEYS.has(key) && nextToken?.kind === 'vowel';
+}
+
+/**
  * The composing buffer can be a chain of independent "words" joined by the
  * silent "_" boundary marker (see transliterator.ts) — e.g. "fo_ra_y" is
  * three words typed as one buffer. Suggestions only make sense per-word:
@@ -75,8 +93,11 @@ export function getSuggestionSections(romanBuffer: string): SuggestionSection[] 
       seenOutputs.add(currentUnicode);
       options.push({ key: token.raw, roman: segment, unicode: currentUnicode, isCurrent: true });
 
+      const nextToken = tokens[tokenIndex + 1];
+
       for (const altKey of family) {
         if (altKey === token.raw) continue;
+        if (isContextSensitiveBeforeVowel(altKey, nextToken)) continue;
         const roman = before + altKey + after;
         const unicode = transliterate(roman);
         if (seenOutputs.has(unicode)) continue;

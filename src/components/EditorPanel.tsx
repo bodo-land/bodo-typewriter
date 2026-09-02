@@ -114,99 +114,123 @@ export function EditorPanel({
         </div>
       )}
 
-      {/* ── Roman input ── */}
-      <div style={{ flexShrink: 0 }}>
-        <span style={s.sectionLabel}>Roman input</span>
-        <textarea
-          ref={imeActive ? ime.ref : undefined}
-          rows={4}
-          value={imeActive ? ime.romanBuffer : plainRoman}
-          onChange={e => { if (!imeActive) setPlainRoman(e.target.value); }}
-          onKeyDown={handleKeyDown}
-          onPaste={imeActive ? ime.handlePaste : undefined}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          placeholder={imeActive ? 'Type in Roman — e.g. bwdw → बोदो\nkhalam_dwng → खालामदों' : 'IME off — typing in English'}
-          spellCheck={false}
-          style={{
-            ...s.textarea,
-            backgroundColor: imeActive ? s.textarea.backgroundColor : `${GH.attentionFg}14`,
-            borderColor: focused ? GH.accentFg : imeActive ? GH.borderDefault : GH.attentionFg,
-            boxShadow: focused ? `0 0 0 3px ${GH.accentSubtle}` : 'none',
-            transition: 'border-color 80ms, box-shadow 80ms, background-color 80ms',
-          }}
-          aria-label="Roman transliteration input"
-        />
+      {/*
+        Roman input row: the input itself on the left, and — only while
+        there's something to show — a vertical "did you mean" rail on the
+        right. The rail lives here, inside the Transliterator card (see
+        its own comment below), not as a real third grid column.
+      */}
+      <div className="roman-input-row" style={{ display: 'flex', gap: '16px', flexShrink: 0, alignItems: 'flex-start' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={s.sectionLabel}>Roman input</span>
+          <textarea
+            ref={imeActive ? ime.ref : undefined}
+            rows={4}
+            value={imeActive ? ime.romanBuffer : plainRoman}
+            onChange={e => { if (!imeActive) setPlainRoman(e.target.value); }}
+            onKeyDown={handleKeyDown}
+            onPaste={imeActive ? ime.handlePaste : undefined}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder={imeActive ? 'Type in Roman — e.g. bwdw → बोदो\nkhalam_dwng → खालामदों' : 'IME off — typing in English'}
+            spellCheck={false}
+            style={{
+              ...s.textarea,
+              backgroundColor: imeActive ? s.textarea.backgroundColor : `${GH.attentionFg}14`,
+              borderColor: focused ? GH.accentFg : imeActive ? GH.borderDefault : GH.attentionFg,
+              boxShadow: focused ? `0 0 0 3px ${GH.accentSubtle}` : 'none',
+              transition: 'border-color 80ms, box-shadow 80ms, background-color 80ms',
+            }}
+            aria-label="Roman transliteration input"
+          />
 
-        {/* Composing hint */}
-        {imeActive && ime.romanBuffer && (
-          <div style={{
-            marginTop: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            backgroundColor: GH.accentSubtle,
-            border: `1px solid ${GH.accentEmphasis}33`,
-            animation: 'composing-fade-in 100ms ease-out',
-          }}>
-            <span style={{
-              display: 'inline-flex',
+          {/* Composing hint */}
+          {imeActive && ime.romanBuffer && (
+            <div style={{
+              marginTop: '8px',
+              display: 'flex',
               alignItems: 'center',
-              gap: '5px',
-              fontSize: 'var(--fs-11)',
-              fontWeight: 600,
-              color: GH.accentFg,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              flexShrink: 0,
+              gap: '10px',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              backgroundColor: GH.accentSubtle,
+              border: `1px solid ${GH.accentEmphasis}33`,
+              animation: 'composing-fade-in 100ms ease-out',
             }}>
-              <StatusDot active />
-              Composing
-            </span>
-
-            <Key k={ime.romanBuffer} />
-
-            <span style={{ color: GH.fgSubtle, fontSize: 'var(--fs-14)', flexShrink: 0 }}>→</span>
-
-            <span style={{
-              fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: 'var(--fs-20)',
-              fontWeight: 500,
-              color: GH.fgDefault,
-              wordBreak: 'break-all',
-            }}>
-              {transliterate(ime.romanBuffer)}
               <span style={{
-                display: 'inline-block',
-                width: '2px',
-                height: '1.1em',
-                marginLeft: '2px',
-                verticalAlign: 'text-bottom',
-                backgroundColor: GH.accentFg,
-                animation: 'composing-caret 1s step-end infinite',
-              }} />
-            </span>
-          </div>
-        )}
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontSize: 'var(--fs-11)',
+                fontWeight: 600,
+                color: GH.accentFg,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                flexShrink: 0,
+              }}>
+                <StatusDot active />
+                Composing
+              </span>
 
-        {imeActive && ime.romanBuffer && (
-          <Suggestions sections={suggestionSections} onApply={applySuggestion} />
-        )}
+              <Key k={ime.romanBuffer} />
 
-        {!imeActive && (
-          <div style={{
-            marginTop: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: 'var(--fs-14)',
-            fontWeight: 600,
-            color: GH.attentionFg,
+              <span style={{ color: GH.fgSubtle, fontSize: 'var(--fs-14)', flexShrink: 0 }}>→</span>
+
+              <span style={{
+                fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
+                fontSize: 'var(--fs-20)',
+                fontWeight: 500,
+                color: GH.fgDefault,
+                wordBreak: 'break-all',
+              }}>
+                {transliterate(ime.romanBuffer)}
+                <span style={{
+                  display: 'inline-block',
+                  width: '2px',
+                  height: '1.1em',
+                  marginLeft: '2px',
+                  verticalAlign: 'text-bottom',
+                  backgroundColor: GH.accentFg,
+                  animation: 'composing-caret 1s step-end infinite',
+                }} />
+              </span>
+            </div>
+          )}
+
+          {!imeActive && (
+            <div style={{
+              marginTop: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: 'var(--fs-14)',
+              fontWeight: 600,
+              color: GH.attentionFg,
+            }}>
+              <span>⚠</span>
+              <span>IME off — press F9 or the keyboard button to re-enable transliteration</span>
+            </div>
+          )}
+        </div>
+
+        {/*
+          Vertical suggestions rail — visually reads as if it sits between
+          the Transliterator and Script Reference cards (it hugs this
+          card's right edge, right where the gap to Script Reference
+          begins), but it's structurally just the right side of this same
+          flex row — still fully inside the Transliterator card's own
+          border, not a real third column.
+        */}
+        {imeActive && suggestionSections.length > 0 && (
+          <div className="suggestions-rail" style={{
+            width: '200px',
+            flexShrink: 0,
+            maxHeight: '220px',
+            overflowY: 'auto',
+            paddingLeft: '16px',
+            borderLeft: `1px solid ${GH.borderMuted}`,
           }}>
-            <span>⚠</span>
-            <span>IME off — press F9 or the keyboard button to re-enable transliteration</span>
+            <Suggestions sections={suggestionSections} onApply={applySuggestion} />
           </div>
         )}
       </div>

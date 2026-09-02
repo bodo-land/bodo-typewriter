@@ -69,7 +69,11 @@ export const s = {
     margin: '0 auto',
     padding: '20px clamp(16px, 3vw, 40px)',
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 0.85fr)',
+    // Transliterator gets noticeably more room than before specifically so
+    // it has space to host its own vertical suggestions rail (see
+    // EditorPanel's "Roman input" row) without cramping the Roman input
+    // box — which has the effect of shifting Script Reference rightward.
+    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 0.6fr)',
     gap: '20px',
     boxSizing: 'border-box',
   } as React.CSSProperties,

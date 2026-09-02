@@ -90,6 +90,17 @@ html, body { margin: 0; height: 100%; }
   .main-grid { grid-template-columns: 1fr !important; }
   .panel-card { min-height: 60vh; }
 
+  /* Not enough width for input + rail side by side — stack the
+     suggestions rail below the Roman input instead of cramping both. */
+  .roman-input-row { flex-direction: column; }
+  .suggestions-rail {
+    width: 100% !important;
+    padding-left: 0 !important;
+    border-left: none !important;
+    border-top: 1px solid var(--gh-border-muted);
+    padding-top: 10px !important;
+  }
+
   /* No room for a persistent sidebar column on narrow screens — it opens
      as a slide-in overlay (toggled the same way as on desktop) instead
      of disappearing entirely. */
