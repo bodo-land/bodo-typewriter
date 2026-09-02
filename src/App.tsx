@@ -642,12 +642,18 @@ function PanelHeader({
 // ─── Editor panel ─────────────────────────────────────────────────────────────
 
 function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleIme: () => void }) {
-  // `paragraph` holds every word already committed — fully independent of
-  // the composing buffer below. Backspace only ever reaches into it when
-  // the paragraph textarea itself has focus (native textarea behaviour).
+  // `paragraph` / `romanParagraph` hold every word already committed, in
+  // Devanagari and raw Roman form respectively — both fully independent of
+  // the composing buffer below and of each other. Backspace only ever
+  // reaches into either one when that textarea itself has focus (native
+  // textarea behaviour).
   const [paragraph, setParagraph] = useState('');
+  const [romanParagraph, setRomanParagraph] = useState('');
   const ime = useBodoIME({
-    onCommit: text => setParagraph(p => p + text),
+    onCommit: (unicodeText, romanText) => {
+      setParagraph(p => p + unicodeText);
+      setRomanParagraph(p => p + romanText);
+    },
   });
   const [focused, setFocused] = useState(false);
   const [plainRoman, setPlainRoman] = useState('');
@@ -664,6 +670,7 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
   const resetAll = useCallback(() => {
     ime.reset();
     setParagraph('');
+    setRomanParagraph('');
     setPlainRoman('');
   }, [ime]);
 
@@ -767,13 +774,61 @@ function EditorPanel({ imeActive, onToggleIme }: { imeActive: boolean; onToggleI
       {/* ── Divider ── */}
       <div style={{ ...s.divider, flexShrink: 0 }} />
 
+      {/*
+        Roman paragraph — a plain, independent textarea just like the
+        Devanagari paragraph below: Backspace/typing here is native browser
+        behaviour and only ever touches THIS box. It's populated by
+        committed words' raw Roman form (via onCommit) but has no other
+        link back to Roman input — Backspace there can never reach text
+        that has landed here.
+      */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
+          <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Roman paragraph</span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <CopyBtn text={romanParagraph} />
+            <Btn
+              variant="danger"
+              onClick={resetAll}
+              disabled={!paragraph && !romanParagraph && !ime.romanBuffer}
+              title="Clear all text"
+            >
+              <IcoTrash /> Clear
+            </Btn>
+          </div>
+        </div>
+
+        <textarea
+          value={romanParagraph}
+          onChange={e => setRomanParagraph(e.target.value)}
+          placeholder="Your raw Roman keystrokes accumulate here as you commit words (Space/Enter) — or type directly…"
+          spellCheck={false}
+          style={{
+            ...s.textarea,
+            flex: 1,
+            minHeight: 0,
+            resize: 'none',
+            fontStyle: romanParagraph ? 'normal' : 'italic',
+          }}
+          aria-label="Roman paragraph output"
+        />
+      </div>
+
+      {/* ── Divider ── */}
+      <div style={{ ...s.divider, flexShrink: 0 }} />
+
       {/* ── Output — flexes to fill all remaining height ── */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
           <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Devanagari paragraph</span>
           <div style={{ display: 'flex', gap: '6px' }}>
             <CopyBtn text={paragraph} />
-            <Btn variant="danger" onClick={resetAll} disabled={!paragraph && !ime.romanBuffer} title="Clear all text">
+            <Btn
+              variant="danger"
+              onClick={resetAll}
+              disabled={!paragraph && !romanParagraph && !ime.romanBuffer}
+              title="Clear all text"
+            >
               <IcoTrash /> Clear
             </Btn>
           </div>

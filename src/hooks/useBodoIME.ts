@@ -53,8 +53,13 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { transliterate } from '../engine/transliterator';
 
 export type UseBodoIMEOptions = {
-  /** Called with finished Unicode text (word + boundary char) on Space/Enter/paste. */
-  onCommit?: (unicodeText: string) => void;
+  /**
+   * Called on Space/Enter/paste with the finished word (+ boundary char),
+   * in both its transliterated Unicode form and its raw Roman form — e.g.
+   * a caller keeping parallel "Roman paragraph" and "Devanagari paragraph"
+   * stores appends unicodeText to one and romanText to the other.
+   */
+  onCommit?: (unicodeText: string, romanText: string) => void;
 };
 
 export type IMEState = {
@@ -142,7 +147,7 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
       // "Word boundaries" above).
       if (COMMIT_CHARS.has(key)) {
         e.preventDefault();
-        onCommit?.(transliterate(romanBuffer) + ' ');
+        onCommit?.(transliterate(romanBuffer) + ' ', romanBuffer + ' ');
         setRomanBuffer('');
         return;
       }
@@ -168,7 +173,7 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
       e.preventDefault();
       const pasted = e.clipboardData.getData('text/plain');
       if (!pasted) return;
-      onCommit?.(transliterate(romanBuffer) + transliterate(pasted));
+      onCommit?.(transliterate(romanBuffer) + transliterate(pasted), romanBuffer + pasted);
       setRomanBuffer('');
     },
     [romanBuffer, onCommit],
