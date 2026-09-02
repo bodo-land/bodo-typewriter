@@ -60,9 +60,12 @@ export default function App() {
         {sidebarOpen && (
           <Sidebar
             history={session.history}
-            currentPreview={session.paragraph || session.romanParagraph}
+            currentRoman={session.romanParagraph}
+            currentDevanagari={session.paragraph}
             onNewSession={session.startNewSession}
             onRestore={session.restoreSession}
+            onDelete={session.deleteSession}
+            onClose={() => setSidebarOpen(false)}
           />
         )}
 
@@ -87,7 +90,8 @@ export default function App() {
               romanParagraph={session.romanParagraph}
               setParagraph={session.setParagraph}
               setRomanParagraph={session.setRomanParagraph}
-              resetAll={session.resetAll}
+              onClear={session.startNewSession}
+              justSaved={session.justSaved}
             />
           </div>
 

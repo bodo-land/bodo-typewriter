@@ -1,15 +1,19 @@
 /**
  * Owns the live editing session (paragraph + romanParagraph + the composing
  * buffer via useBodoIME) plus up to MAX_HISTORY archived sessions —
- * shared between the Sidebar (browse/restore/new) and EditorPanel (edit).
+ * shared between the Sidebar (browse/restore/new/delete) and EditorPanel
+ * (edit).
  *
- * The live session autosaves continuously; startNewSession archives it into
- * history and starts a blank one. restoreSession swaps a history entry back
- * in and parks whatever was current in its place, so switching between
- * sessions never silently discards work.
+ * The live session autosaves continuously (justSaved flashes briefly after
+ * each save, for the UI to show a "Saved" indicator). startNewSession
+ * archives it into history and starts a blank one — this is also what
+ * backs the "Clear" buttons in EditorPanel, so clearing is never a
+ * destructive dead end. restoreSession swaps a history entry back in and
+ * parks whatever was current in its place, so switching between sessions
+ * never silently discards work either.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useBodoIME, type IMEState } from './useBodoIME';
 import {
   type Session,
@@ -29,9 +33,11 @@ export type SessionManager = {
   setParagraph: (value: string) => void;
   setRomanParagraph: (value: string) => void;
   history: Session[];
+  /** Briefly true right after an autosave completes — drives a "Saved" indicator. */
+  justSaved: boolean;
   startNewSession: () => void;
   restoreSession: (id: string) => void;
-  resetAll: () => void;
+  deleteSession: (id: string) => void;
 };
 
 export function useSessionManager(): SessionManager {
@@ -50,9 +56,19 @@ export function useSessionManager(): SessionManager {
   });
 
   const [history, setHistory] = useState<Session[]>(() => loadHistory());
+  const [justSaved, setJustSaved] = useState(false);
+  // True only for this effect's very first run (the mount itself) — nothing
+  // has changed yet at that point, so there's nothing new to save or flash.
+  const mounted = useRef(false);
+  const flashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+
+    const saveTimeout = setTimeout(() => {
       saveCurrentSession({
         id: 'current',
         paragraph,
@@ -60,15 +76,16 @@ export function useSessionManager(): SessionManager {
         romanBuffer: ime.romanBuffer,
         savedAt: Date.now(),
       });
+      setJustSaved(true);
+      if (flashTimeout.current) clearTimeout(flashTimeout.current);
+      flashTimeout.current = setTimeout(() => setJustSaved(false), 1500);
     }, 400);
-    return () => clearTimeout(t);
-  }, [paragraph, romanParagraph, ime.romanBuffer]);
 
-  const resetAll = useCallback(() => {
-    ime.reset();
-    setParagraph('');
-    setRomanParagraph('');
-  }, [ime]);
+    return () => {
+      clearTimeout(saveTimeout);
+      if (flashTimeout.current) clearTimeout(flashTimeout.current);
+    };
+  }, [paragraph, romanParagraph, ime.romanBuffer]);
 
   const startNewSession = useCallback(() => {
     const snapshot: Session = {
@@ -111,6 +128,12 @@ export function useSessionManager(): SessionManager {
     saveCurrentSession({ ...target, id: 'current', savedAt: Date.now() });
   }, [paragraph, romanParagraph, ime, history]);
 
+  const deleteSession = useCallback((id: string) => {
+    const next = history.filter(sess => sess.id !== id);
+    setHistory(next);
+    saveHistory(next);
+  }, [history]);
+
   return {
     ime,
     paragraph,
@@ -118,8 +141,9 @@ export function useSessionManager(): SessionManager {
     setParagraph,
     setRomanParagraph,
     history,
+    justSaved,
     startNewSession,
     restoreSession,
-    resetAll,
+    deleteSession,
   };
 }

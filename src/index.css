@@ -81,13 +81,35 @@ html, body { margin: 0; height: 100%; }
    scrolling page with the two panels stacked. */
 .app-shell { overflow: hidden; }
 
+/* Invisible/inert on desktop — only shown behind the sidebar on narrow
+   screens (below), where the sidebar becomes a dismissible overlay. */
+.sidebar-backdrop { display: none; }
+
 @media (max-width: 860px) {
   .app-shell { height: auto; min-height: 100dvh; overflow: visible; }
   .main-grid { grid-template-columns: 1fr !important; }
   .panel-card { min-height: 60vh; }
-  /* No room for a persistent sidebar on narrow screens — the session
-     history it shows is still reachable once the layout has more room. */
-  .sidebar { display: none !important; }
+
+  /* No room for a persistent sidebar column on narrow screens — it opens
+     as a slide-in overlay (toggled the same way as on desktop) instead
+     of disappearing entirely. */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+  }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    width: 80vw;
+    max-width: 300px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+  }
 }
 
 @keyframes composing-fade-in {

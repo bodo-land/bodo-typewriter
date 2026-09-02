@@ -2,10 +2,12 @@ import { useState, useCallback } from 'react';
 import type { IMEState } from '../hooks/useBodoIME';
 import { transliterate } from '../engine/transliterator';
 import { GH, s } from '../styles/theme';
-import { Btn, CopyBtn } from './Btn';
+import { Btn, CopyBtn, DownloadBtn } from './Btn';
 import { Key } from './Key';
 import { StatusDot } from './StatusDot';
-import { IcoTrash } from './icons';
+import { IcoTrash, IcoCheck, IcoX } from './icons';
+
+const TIP_DISMISSED_KEY = 'bodo-typewriter:tip-dismissed';
 
 export function EditorPanel({
   imeActive,
@@ -15,7 +17,8 @@ export function EditorPanel({
   romanParagraph,
   setParagraph,
   setRomanParagraph,
-  resetAll,
+  onClear,
+  justSaved,
 }: {
   imeActive: boolean;
   onToggleIme: () => void;
@@ -24,10 +27,27 @@ export function EditorPanel({
   romanParagraph: string;
   setParagraph: (value: string) => void;
   setRomanParagraph: (value: string) => void;
-  resetAll: () => void;
+  onClear: () => void;
+  justSaved: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const [plainRoman, setPlainRoman] = useState('');
+  const [tipDismissed, setTipDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(TIP_DISMISSED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const dismissTip = useCallback(() => {
+    setTipDismissed(true);
+    try {
+      localStorage.setItem(TIP_DISMISSED_KEY, '1');
+    } catch {
+      // localStorage unavailable — tip will just reappear next visit
+    }
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -39,15 +59,51 @@ export function EditorPanel({
   );
 
   const handleClear = useCallback(() => {
-    resetAll();
+    onClear();
     setPlainRoman('');
-  }, [resetAll]);
+  }, [onClear]);
 
   const charCount = [...paragraph].length;
   const lineCount = paragraph ? paragraph.split('\n').length : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0 }}>
+
+      {!tipDismissed && (
+        <div style={{
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '8px',
+          padding: '10px 12px',
+          borderRadius: '6px',
+          backgroundColor: GH.accentSubtle,
+          border: `1px solid ${GH.accentEmphasis}33`,
+          fontSize: 'var(--fs-13)',
+          color: GH.fgDefault,
+        }}>
+          <span style={{ flex: 1 }}>
+            <strong>Tip:</strong> type Roman below — each word you finish with Space/Enter
+            gets added to both "Roman paragraph" and "Devanagari paragraph" underneath.
+            Both boxes are freely editable on their own too.
+          </span>
+          <button
+            onClick={dismissTip}
+            aria-label="Dismiss tip"
+            title="Dismiss"
+            style={{
+              flexShrink: 0,
+              border: 'none',
+              background: 'none',
+              color: GH.fgMuted,
+              cursor: 'pointer',
+              padding: '2px',
+            }}
+          >
+            <IcoX />
+          </button>
+        </div>
+      )}
 
       {/* ── Roman input ── */}
       <div style={{ flexShrink: 0 }}>
@@ -65,9 +121,10 @@ export function EditorPanel({
           spellCheck={false}
           style={{
             ...s.textarea,
+            backgroundColor: imeActive ? s.textarea.backgroundColor : `${GH.attentionFg}14`,
             borderColor: focused ? GH.accentFg : imeActive ? GH.borderDefault : GH.attentionFg,
             boxShadow: focused ? `0 0 0 3px ${GH.accentSubtle}` : 'none',
-            transition: 'border-color 80ms, box-shadow 80ms',
+            transition: 'border-color 80ms, box-shadow 80ms, background-color 80ms',
           }}
           aria-label="Roman transliteration input"
         />
@@ -132,6 +189,7 @@ export function EditorPanel({
             alignItems: 'center',
             gap: '6px',
             fontSize: 'var(--fs-14)',
+            fontWeight: 600,
             color: GH.attentionFg,
           }}>
             <span>⚠</span>
@@ -155,12 +213,13 @@ export function EditorPanel({
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
           <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Roman paragraph</span>
           <div style={{ display: 'flex', gap: '6px' }}>
+            <DownloadBtn text={romanParagraph} filename="bodo-roman.txt" title="Download as .txt" />
             <CopyBtn text={romanParagraph} />
             <Btn
               variant="danger"
               onClick={handleClear}
               disabled={!paragraph && !romanParagraph && !ime.romanBuffer}
-              title="Clear all text"
+              title="Archive this session and clear both boxes"
             >
               <IcoTrash /> Clear
             </Btn>
@@ -191,12 +250,13 @@ export function EditorPanel({
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
           <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Devanagari paragraph</span>
           <div style={{ display: 'flex', gap: '6px' }}>
+            <DownloadBtn text={paragraph} filename="bodo-devanagari.txt" title="Download as .txt" />
             <CopyBtn text={paragraph} />
             <Btn
               variant="danger"
               onClick={handleClear}
               disabled={!paragraph && !romanParagraph && !ime.romanBuffer}
-              title="Clear all text"
+              title="Archive this session and clear both boxes"
             >
               <IcoTrash /> Clear
             </Btn>
@@ -232,6 +292,7 @@ export function EditorPanel({
       {/* ── Status bar ── */}
       <div style={{
         display: 'flex',
+        alignItems: 'center',
         gap: '16px',
         fontSize: 'var(--fs-13)',
         color: GH.fgSubtle,
@@ -242,6 +303,17 @@ export function EditorPanel({
       }}>
         <span><span style={{ color: GH.fgMuted }}>{charCount}</span> chars</span>
         <span><span style={{ color: GH.fgMuted }}>{lineCount}</span> lines</span>
+        <span style={{
+          marginLeft: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          color: GH.successFg,
+          opacity: justSaved ? 1 : 0,
+          transition: 'opacity 300ms',
+        }}>
+          <IcoCheck /> Saved
+        </span>
       </div>
     </div>
   );

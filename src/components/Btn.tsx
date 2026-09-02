@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { GH, s } from '../styles/theme';
-import { IcoCheck, IcoCopy } from './icons';
+import { IcoCheck, IcoCopy, IcoDownload } from './icons';
+import { downloadTextFile } from '../utils/download';
 
 export function Btn({
   variant = 'secondary',
@@ -8,12 +9,15 @@ export function Btn({
   children,
   disabled,
   title,
+  ariaLabel,
 }: {
   variant?: 'primary' | 'secondary' | 'danger';
   onClick?: () => void;
   children: React.ReactNode;
   disabled?: boolean;
   title?: string;
+  /** Accessible name for icon-only buttons (falls back to `title` if omitted). */
+  ariaLabel?: string;
 }) {
   const [hover, setHover] = useState(false);
 
@@ -40,6 +44,7 @@ export function Btn({
       onMouseLeave={() => setHover(false)}
       onClick={disabled ? undefined : onClick}
       title={title}
+      aria-label={ariaLabel ?? title}
     >
       {children}
     </button>
@@ -61,6 +66,15 @@ export function CopyBtn({ text, label = 'Copy' }: { text: string; label?: string
     <Btn variant="secondary" onClick={handleCopy} disabled={!text}>
       {copied ? <IcoCheck /> : <IcoCopy />}
       {copied ? 'Copied!' : label}
+    </Btn>
+  );
+}
+
+/** A Btn that downloads `text` as a .txt file. */
+export function DownloadBtn({ text, filename, title }: { text: string; filename: string; title: string }) {
+  return (
+    <Btn variant="secondary" onClick={() => downloadTextFile(filename, text)} disabled={!text} title={title}>
+      <IcoDownload />
     </Btn>
   );
 }

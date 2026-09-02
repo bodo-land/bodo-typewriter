@@ -54,7 +54,11 @@ export const s = {
     alignItems: 'center',
     padding: '0 clamp(16px, 3vw, 40px)',
     gap: '16px',
-    zIndex: 40,
+    position: 'relative',
+    // Must stay above the sidebar's mobile-overlay z-index (see index.css)
+    // so its toggle button (and everything else) stays clickable while
+    // the sidebar is open as a drawer on narrow screens.
+    zIndex: 110,
   } as React.CSSProperties,
 
   mainGrid: {
