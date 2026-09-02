@@ -87,7 +87,7 @@ describe('standalone vowels', () => {
 // ── Consonants (documented) ───────────────────────────────────────────────────
 
 describe('consonants — documented', () => {
-  it('[D] k  → ख', () => expect(transliterate('k')).toBe('ख'));
+  it('[D] k  → क', () => expect(transliterate('k')).toBe('क'));
   it('[D] kh → ख', () => expect(transliterate('kh')).toBe('ख'));
   it('[D] g  → ग', () => expect(transliterate('g')).toBe('ग'));
   it('[D] NG → ङ', () => expect(transliterate('NG')).toBe('ङ'));
@@ -128,26 +128,26 @@ describe('consonants — inferred', () => {
 // ── Consonant + Vowel combinations ────────────────────────────────────────────
 
 describe('consonant + vowel (mātrā) combinations', () => {
-  it('[D] ka  → खा', () => expect(transliterate('ka')).toBe('खा'));
-  it('[D] ki  → खि', () => expect(transliterate('ki')).toBe('खि'));
-  it('[D] ku  → खु', () => expect(transliterate('ku')).toBe('खु'));
-  it('[D] ke  → खे', () => expect(transliterate('ke')).toBe('खे'));
-  it('[D] kwi → खै', () => expect(transliterate('kwi')).toBe('खै'));
-  it('[D] kai → खै', () => expect(transliterate('kai')).toBe('खै'));
-  it('[D] kw  → खो', () => expect(transliterate('kw')).toBe('खो'));
-  it('[D] kwo → खौ', () => expect(transliterate('kwo')).toBe('खौ'));
-  it('[D] kou → खौ', () => expect(transliterate('kou')).toBe('खौ'));
+  it('[D] ka  → का', () => expect(transliterate('ka')).toBe('का'));
+  it('[D] ki  → कि', () => expect(transliterate('ki')).toBe('कि'));
+  it('[D] ku  → कु', () => expect(transliterate('ku')).toBe('कु'));
+  it('[D] ke  → के', () => expect(transliterate('ke')).toBe('के'));
+  it('[D] kwi → कै', () => expect(transliterate('kwi')).toBe('कै'));
+  it('[D] kai → कै', () => expect(transliterate('kai')).toBe('कै'));
+  it('[D] kw  → को', () => expect(transliterate('kw')).toBe('को'));
+  it('[D] kwo → कौ', () => expect(transliterate('kwo')).toBe('कौ'));
+  it('[D] kou → कौ', () => expect(transliterate('kou')).toBe('कौ'));
 
   // 'o' after consonant = inherent vowel (no matra added)
-  it('[D] ko  → ख (k with inherent vowel, no visible matra)', () =>
-    expect(transliterate('ko')).toBe('ख'));
+  it('[D] ko  → क (k with inherent vowel, no visible matra)', () =>
+    expect(transliterate('ko')).toBe('क'));
 });
 
 // ── Consonant clusters (halant) ───────────────────────────────────────────────
 
 describe('consonant clusters', () => {
-  it('[I] kt → ख्थ (halant inserted between two consonants)', () =>
-    expect(transliterate('kt')).toBe('ख्थ'));
+  it('[I] kt → क्थ (halant inserted between two consonants)', () =>
+    expect(transliterate('kt')).toBe('क्थ'));
 
   it('[I] sth → स्थ (s + th conjunct)', () =>
     expect(transliterate('sth')).toBe('स्थ'));
@@ -179,8 +179,8 @@ describe('ng special rule', () => {
   });
 
   it('[D] ng before consonant → anusvara only (no ग)', () => {
-    // ng + k  →  ं + ख
-    expect(transliterate('ngk')).toBe('ंख');
+    // ng + k  →  ं + क
+    expect(transliterate('ngk')).toBe('ंक');
   });
 
   it('[D] ng before vowel → anusvara + ग + mātrā', () => {
@@ -210,15 +210,15 @@ describe('full word transliterations', () => {
     expect(transliterate('khwn')).toBe('खोन'));
 
   it('space passes through', () =>
-    // k+a = खा, space, b+a = बा
-    expect(transliterate('ka ba')).toBe('खा बा'));
+    // k+a = का, space, b+a = बा
+    expect(transliterate('ka ba')).toBe('का बा'));
 
   it('digits pass through', () =>
-    expect(transliterate('k1a')).toBe('ख1आ'));
+    expect(transliterate('k1a')).toBe('क1आ'));
 
   it('multiple consecutive vowels at start', () =>
-    // ou = औ (standalone), then k + a = खा
-    expect(transliterate('ouka')).toBe('औखा'));
+    // ou = औ (standalone), then k + a = का
+    expect(transliterate('ouka')).toBe('औका'));
 });
 
 // ── Edge cases ────────────────────────────────────────────────────────────────
@@ -232,13 +232,13 @@ describe('edge cases', () => {
 
   it('consonant at end of input (no vowel following)', () =>
     // consonant alone = consonant with inherent vowel
-    expect(transliterate('k')).toBe('ख'));
+    expect(transliterate('k')).toBe('क'));
 
   it('double consonant (no vowel between) → halant conjunct', () =>
-    expect(transliterate('kk')).toBe('ख्ख'));
+    expect(transliterate('kk')).toBe('क्क'));
 
   it('I (cap) after consonant acts as ya-consonant', () => {
-    // k + I → ख + halant + य (conjunct kya)
-    expect(transliterate('kI')).toBe('ख्य');
+    // k + I → क + halant + य (conjunct kya)
+    expect(transliterate('kI')).toBe('क्य');
   });
 });
