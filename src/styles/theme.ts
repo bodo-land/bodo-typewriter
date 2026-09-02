@@ -100,35 +100,6 @@ export const s = {
     ...extra,
   }),
 
-  textarea: {
-    width: '100%',
-    backgroundColor: GH.canvasDefault,
-    border: `1px solid ${GH.borderDefault}`,
-    borderRadius: '6px',
-    color: GH.fgDefault,
-    fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
-    fontSize: 'var(--fs-16)',
-    lineHeight: '1.6',
-    padding: '12px',
-    resize: 'vertical',
-    outline: 'none',
-    boxSizing: 'border-box',
-    display: 'block',
-  } as React.CSSProperties,
-
-  output: {
-    backgroundColor: GH.canvasInset,
-    border: `1px solid ${GH.borderDefault}`,
-    borderRadius: '6px',
-    color: GH.fgDefault,
-    fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-    fontSize: 'var(--fs-24)',
-    lineHeight: '1.8',
-    padding: '12px',
-    minHeight: '80px',
-    wordBreak: 'break-all',
-  } as React.CSSProperties,
-
   btnPrimary: {
     backgroundColor: GH.accentEmphasis,
     border: '1px solid rgba(240,246,252,0.1)',

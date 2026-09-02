@@ -10,7 +10,6 @@ import { ReferencePanel } from './components/ReferencePanel';
 import { StatusDot } from './components/StatusDot';
 import { Btn } from './components/Btn';
 import { IcoChat, IcoPlus, IcoTrash } from './components/icons';
-import './App.css';
 
 const REFERENCE_OPEN_KEY = 'bodo-typewriter:reference-open';
 

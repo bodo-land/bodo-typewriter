@@ -84,7 +84,7 @@ export const U = {
   YA:  'य', // य  — DOCUMENTED (key: I/y  — capital-I or lowercase-y)
   RA:  'र', // र  — DOCUMENTED (key: r)
   LA:  'ल', // ल  — DOCUMENTED (key: l)
-  LLA: 'ऴ', // ळ  — INFERRED   (key: L)
+  LLA: 'ऴ', // ऴ  — INFERRED   (key: L) — U+0934 LLLA, not U+0933 LLA (ळ), despite the constant's name
   VA:  'व', // व  — DOCUMENTED (key: O  — capital-O)
   SHA: 'श', // श  — INFERRED   (key: S/sh/xh)
   SSA: 'ष', // ष  — INFERRED   (key: x/Xh)
