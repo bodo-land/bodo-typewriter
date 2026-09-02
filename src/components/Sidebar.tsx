@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { GH } from '../styles/theme';
 import { Btn } from './Btn';
 import { HistoryItem } from './HistoryItem';
-import { IcoBook, IcoPlus, IcoTrash } from './icons';
+import { RenameInput } from './RenameInput';
+import { IcoBook, IcoPlus, IcoTrash, IcoPencil } from './icons';
 import { MAX_HISTORY, type Session } from '../utils/sessionStorage';
 
 /**
@@ -10,10 +11,10 @@ import { MAX_HISTORY, type Session } from '../utils/sessionStorage';
  * it lists saved sessions, with the live session pinned at the top like an
  * active/open file. Click a history entry to swap it in (restoreSession
  * parks whatever's current back into history, so nothing is lost); the
- * trash icon on hover deletes one outright. The pinned "Current" entry
- * gets the same hover-trash treatment, but deleting it wipes the live
- * session directly — unlike history deletes, there's no copy to lose
- * since it was never archived.
+ * trash icon on hover deletes one outright, and a pencil icon opens an
+ * inline rename. The pinned "Current" entry gets the same hover
+ * treatment, but deleting it wipes the live session directly — unlike
+ * history deletes, there's no copy to lose since it was never archived.
  *
  * On narrow screens (see index.css) this renders as a dismissible overlay
  * with a backdrop instead of an inline column — `onClose` is only used
@@ -23,22 +24,29 @@ export function Sidebar({
   history,
   currentRoman,
   currentDevanagari,
+  currentTitle,
+  onRenameCurrent,
   onNewSession,
   onRestore,
   onDelete,
+  onRename,
   onDeleteCurrent,
   onClose,
 }: {
   history: Session[];
   currentRoman: string;
   currentDevanagari: string;
+  currentTitle: string;
+  onRenameCurrent: (title: string) => void;
   onNewSession: () => void;
   onRestore: (id: string) => void;
   onDelete: (id: string) => void;
+  onRename: (id: string, title: string) => void;
   onDeleteCurrent: () => void;
   onClose: () => void;
 }) {
   const [currentHover, setCurrentHover] = useState(false);
+  const [renamingCurrent, setRenamingCurrent] = useState(false);
   const currentIsEmpty = !currentRoman.trim() && !currentDevanagari.trim();
 
   return (
@@ -115,51 +123,95 @@ export function Sidebar({
                 }} />
                 Current
               </div>
-              {currentRoman.trim() && (
-                <div style={{
-                  fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
-                  fontSize: 'var(--fs-11)',
-                  color: GH.fgSubtle,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}>
-                  {currentRoman.trim()}
-                </div>
+
+              {renamingCurrent ? (
+                <RenameInput
+                  initialValue={currentTitle}
+                  placeholder="Untitled session"
+                  onCommit={title => { onRenameCurrent(title); setRenamingCurrent(false); }}
+                  onCancel={() => setRenamingCurrent(false)}
+                />
+              ) : (
+                <>
+                  {currentTitle && (
+                    <div style={{
+                      fontSize: 'var(--fs-14)',
+                      fontWeight: 600,
+                      color: GH.fgDefault,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      {currentTitle}
+                    </div>
+                  )}
+                  {currentRoman.trim() && (
+                    <div style={{
+                      fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
+                      fontSize: 'var(--fs-11)',
+                      color: GH.fgSubtle,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      {currentRoman.trim()}
+                    </div>
+                  )}
+                  <div style={{
+                    fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
+                    fontSize: 'var(--fs-14)',
+                    color: currentTitle ? GH.fgSubtle : GH.fgDefault,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}>
+                    {currentDevanagari.trim() || '(empty)'}
+                  </div>
+                </>
               )}
-              <div style={{
-                fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-                fontSize: 'var(--fs-14)',
-                color: GH.fgDefault,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}>
-                {currentDevanagari.trim() || '(empty)'}
-              </div>
             </div>
 
-            {!currentIsEmpty && (
-              <button
-                onClick={onDeleteCurrent}
-                title="Delete current session (not archived to history)"
-                aria-label="Delete current session"
-                style={{
-                  flexShrink: 0,
-                  border: 'none',
-                  background: 'none',
-                  color: GH.fgSubtle,
-                  cursor: 'pointer',
-                  padding: '4px',
-                  borderRadius: '3px',
-                  opacity: currentHover ? 1 : 0,
-                  transition: 'opacity 80ms, color 80ms',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.color = GH.dangerFg; }}
-                onMouseLeave={e => { e.currentTarget.style.color = GH.fgSubtle; }}
-              >
-                <IcoTrash />
-              </button>
+            {!renamingCurrent && (
+              <div style={{ display: 'flex', flexShrink: 0, opacity: currentHover ? 1 : 0, transition: 'opacity 80ms' }}>
+                <button
+                  onClick={() => setRenamingCurrent(true)}
+                  title="Rename current session"
+                  aria-label="Rename current session"
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    color: GH.fgSubtle,
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '3px',
+                    transition: 'color 80ms',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = GH.accentFg; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = GH.fgSubtle; }}
+                >
+                  <IcoPencil />
+                </button>
+                {!currentIsEmpty && (
+                  <button
+                    onClick={onDeleteCurrent}
+                    title="Delete current session (not archived to history)"
+                    aria-label="Delete current session"
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      color: GH.fgSubtle,
+                      cursor: 'pointer',
+                      padding: '4px',
+                      borderRadius: '3px',
+                      transition: 'color 80ms',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color = GH.dangerFg; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = GH.fgSubtle; }}
+                  >
+                    <IcoTrash />
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
@@ -174,6 +226,7 @@ export function Sidebar({
                 session={sess}
                 onSelect={() => onRestore(sess.id)}
                 onDelete={() => onDelete(sess.id)}
+                onRename={title => onRename(sess.id, title)}
               />
             ))
           )}

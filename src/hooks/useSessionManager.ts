@@ -10,7 +10,8 @@
  * backs the "Clear" buttons in EditorPanel, so clearing is never a
  * destructive dead end. restoreSession swaps a history entry back in and
  * parks whatever was current in its place, so switching between sessions
- * never silently discards work either.
+ * never silently discards work either. Titles are optional and travel
+ * with a session through archive/restore, same as its text.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -32,7 +33,12 @@ export type SessionManager = {
   romanParagraph: string;
   setParagraph: (value: string) => void;
   setRomanParagraph: (value: string) => void;
+  /** User-given name for the current session, or '' for untitled. */
+  currentTitle: string;
+  renameCurrentSession: (title: string) => void;
   history: Session[];
+  /** Renames an archived session by id. */
+  renameSession: (id: string, title: string) => void;
   /** Briefly true right after a save completes (auto or manual) — drives a "Saved" indicator. */
   justSaved: boolean;
   /** Saves the current session to localStorage immediately, skipping the autosave debounce. */
@@ -51,6 +57,7 @@ export function useSessionManager(): SessionManager {
 
   const [paragraph, setParagraph] = useState(() => savedSession?.paragraph ?? '');
   const [romanParagraph, setRomanParagraph] = useState(() => savedSession?.romanParagraph ?? '');
+  const [currentTitle, setCurrentTitle] = useState(() => savedSession?.title ?? '');
   const ime = useBodoIME({
     initialRoman: savedSession?.romanBuffer,
     onCommit: (unicodeText, romanText) => {
@@ -73,11 +80,12 @@ export function useSessionManager(): SessionManager {
       romanParagraph,
       romanBuffer: ime.romanBuffer,
       savedAt: Date.now(),
+      title: currentTitle || undefined,
     });
     setJustSaved(true);
     if (flashTimeout.current) clearTimeout(flashTimeout.current);
     flashTimeout.current = setTimeout(() => setJustSaved(false), 1500);
-  }, [paragraph, romanParagraph, ime.romanBuffer]);
+  }, [paragraph, romanParagraph, ime.romanBuffer, currentTitle]);
 
   useEffect(() => {
     if (!mounted.current) {
@@ -100,6 +108,7 @@ export function useSessionManager(): SessionManager {
       romanParagraph,
       romanBuffer: ime.romanBuffer,
       savedAt: Date.now(),
+      title: currentTitle || undefined,
     };
     if (!isEmptySession(snapshot)) {
       const next = [snapshot, ...history].slice(0, MAX_HISTORY);
@@ -109,13 +118,15 @@ export function useSessionManager(): SessionManager {
     ime.reset();
     setParagraph('');
     setRomanParagraph('');
+    setCurrentTitle('');
     saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt: Date.now() });
-  }, [paragraph, romanParagraph, ime, history]);
+  }, [paragraph, romanParagraph, ime, history, currentTitle]);
 
   const deleteCurrentSession = useCallback(() => {
     ime.reset();
     setParagraph('');
     setRomanParagraph('');
+    setCurrentTitle('');
     saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt: Date.now() });
   }, [ime]);
 
@@ -129,6 +140,7 @@ export function useSessionManager(): SessionManager {
       romanParagraph,
       romanBuffer: ime.romanBuffer,
       savedAt: Date.now(),
+      title: currentTitle || undefined,
     };
     const withoutTarget = history.filter(sess => sess.id !== id);
     const next = isEmptySession(snapshot) ? withoutTarget : [snapshot, ...withoutTarget].slice(0, MAX_HISTORY);
@@ -137,9 +149,10 @@ export function useSessionManager(): SessionManager {
 
     setParagraph(target.paragraph);
     setRomanParagraph(target.romanParagraph);
+    setCurrentTitle(target.title ?? '');
     ime.setRoman(target.romanBuffer);
     saveCurrentSession({ ...target, id: 'current', savedAt: Date.now() });
-  }, [paragraph, romanParagraph, ime, history]);
+  }, [paragraph, romanParagraph, ime, history, currentTitle]);
 
   const deleteSession = useCallback((id: string) => {
     const next = history.filter(sess => sess.id !== id);
@@ -147,13 +160,24 @@ export function useSessionManager(): SessionManager {
     saveHistory(next);
   }, [history]);
 
+  const renameSession = useCallback((id: string, title: string) => {
+    setHistory(prev => {
+      const next = prev.map(sess => (sess.id === id ? { ...sess, title: title || undefined } : sess));
+      saveHistory(next);
+      return next;
+    });
+  }, []);
+
   return {
     ime,
     paragraph,
     romanParagraph,
     setParagraph,
     setRomanParagraph,
+    currentTitle,
+    renameCurrentSession: setCurrentTitle,
     history,
+    renameSession,
     justSaved,
     saveNow: persistNow,
     startNewSession,

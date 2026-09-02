@@ -14,6 +14,8 @@ export type Session = {
   romanParagraph: string;
   romanBuffer: string;
   savedAt: number;
+  /** User-given name, e.g. "Meeting notes". Absent means "untitled" — falls back to a text preview in the UI. */
+  title?: string;
 };
 
 export const MAX_HISTORY = 5;

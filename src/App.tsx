@@ -96,9 +96,12 @@ export default function App() {
             history={session.history}
             currentRoman={session.romanParagraph}
             currentDevanagari={session.paragraph}
+            currentTitle={session.currentTitle}
+            onRenameCurrent={session.renameCurrentSession}
             onNewSession={session.startNewSession}
             onRestore={session.restoreSession}
             onDelete={session.deleteSession}
+            onRename={session.renameSession}
             onDeleteCurrent={session.deleteCurrentSession}
             onClose={() => setSidebarOpen(false)}
           />
