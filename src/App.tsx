@@ -99,6 +99,7 @@ export default function App() {
             onNewSession={session.startNewSession}
             onRestore={session.restoreSession}
             onDelete={session.deleteSession}
+            onDeleteCurrent={session.deleteCurrentSession}
             onClose={() => setSidebarOpen(false)}
           />
         )}

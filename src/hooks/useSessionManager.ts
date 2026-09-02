@@ -38,6 +38,8 @@ export type SessionManager = {
   /** Saves the current session to localStorage immediately, skipping the autosave debounce. */
   saveNow: () => void;
   startNewSession: () => void;
+  /** Wipes the current session outright — unlike startNewSession, it is NOT archived into history first. */
+  deleteCurrentSession: () => void;
   restoreSession: (id: string) => void;
   deleteSession: (id: string) => void;
 };
@@ -110,6 +112,13 @@ export function useSessionManager(): SessionManager {
     saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt: Date.now() });
   }, [paragraph, romanParagraph, ime, history]);
 
+  const deleteCurrentSession = useCallback(() => {
+    ime.reset();
+    setParagraph('');
+    setRomanParagraph('');
+    saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt: Date.now() });
+  }, [ime]);
+
   const restoreSession = useCallback((id: string) => {
     const target = history.find(sess => sess.id === id);
     if (!target) return;
@@ -148,6 +157,7 @@ export function useSessionManager(): SessionManager {
     justSaved,
     saveNow: persistNow,
     startNewSession,
+    deleteCurrentSession,
     restoreSession,
     deleteSession,
   };

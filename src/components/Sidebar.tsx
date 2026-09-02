@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { GH } from '../styles/theme';
 import { Btn } from './Btn';
 import { HistoryItem } from './HistoryItem';
-import { IcoBook, IcoPlus } from './icons';
+import { IcoBook, IcoPlus, IcoTrash } from './icons';
 import { MAX_HISTORY, type Session } from '../utils/sessionStorage';
 
 /**
@@ -9,7 +10,10 @@ import { MAX_HISTORY, type Session } from '../utils/sessionStorage';
  * it lists saved sessions, with the live session pinned at the top like an
  * active/open file. Click a history entry to swap it in (restoreSession
  * parks whatever's current back into history, so nothing is lost); the
- * trash icon on hover deletes one outright.
+ * trash icon on hover deletes one outright. The pinned "Current" entry
+ * gets the same hover-trash treatment, but deleting it wipes the live
+ * session directly — unlike history deletes, there's no copy to lose
+ * since it was never archived.
  *
  * On narrow screens (see index.css) this renders as a dismissible overlay
  * with a backdrop instead of an inline column — `onClose` is only used
@@ -22,6 +26,7 @@ export function Sidebar({
   onNewSession,
   onRestore,
   onDelete,
+  onDeleteCurrent,
   onClose,
 }: {
   history: Session[];
@@ -30,8 +35,12 @@ export function Sidebar({
   onNewSession: () => void;
   onRestore: (id: string) => void;
   onDelete: (id: string) => void;
+  onDeleteCurrent: () => void;
   onClose: () => void;
 }) {
+  const [currentHover, setCurrentHover] = useState(false);
+  const currentIsEmpty = !currentRoman.trim() && !currentDevanagari.trim();
+
   return (
     <>
       <div className="sidebar-backdrop" onClick={onClose} />
@@ -73,53 +82,85 @@ export function Sidebar({
 
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '6px' }}>
           {/* Current session — pinned like the active file in an explorer tree. */}
-          <div style={{
-            padding: '8px 10px',
-            borderRadius: '4px',
-            borderLeft: `2px solid ${GH.accentFg}`,
-            backgroundColor: GH.accentSubtle,
-            marginBottom: '8px',
-          }}>
-            <div style={{
+          <div
+            onMouseEnter={() => setCurrentHover(true)}
+            onMouseLeave={() => setCurrentHover(false)}
+            style={{
               display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              fontSize: 'var(--fs-11)',
-              color: GH.accentFg,
-              fontWeight: 600,
-              marginBottom: '2px',
-            }}>
-              <span style={{
-                display: 'inline-block',
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                backgroundColor: GH.accentFg,
-              }} />
-              Current
-            </div>
-            {currentRoman.trim() && (
+              alignItems: 'flex-start',
+              gap: '4px',
+              padding: '8px 6px 8px 10px',
+              borderRadius: '4px',
+              borderLeft: `2px solid ${GH.accentFg}`,
+              backgroundColor: GH.accentSubtle,
+              marginBottom: '8px',
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
                 fontSize: 'var(--fs-11)',
-                color: GH.fgSubtle,
+                color: GH.accentFg,
+                fontWeight: 600,
+                marginBottom: '2px',
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: GH.accentFg,
+                }} />
+                Current
+              </div>
+              {currentRoman.trim() && (
+                <div style={{
+                  fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
+                  fontSize: 'var(--fs-11)',
+                  color: GH.fgSubtle,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {currentRoman.trim()}
+                </div>
+              )}
+              <div style={{
+                fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
+                fontSize: 'var(--fs-14)',
+                color: GH.fgDefault,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
               }}>
-                {currentRoman.trim()}
+                {currentDevanagari.trim() || '(empty)'}
               </div>
-            )}
-            <div style={{
-              fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: 'var(--fs-14)',
-              color: GH.fgDefault,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}>
-              {currentDevanagari.trim() || '(empty)'}
             </div>
+
+            {!currentIsEmpty && (
+              <button
+                onClick={onDeleteCurrent}
+                title="Delete current session (not archived to history)"
+                aria-label="Delete current session"
+                style={{
+                  flexShrink: 0,
+                  border: 'none',
+                  background: 'none',
+                  color: GH.fgSubtle,
+                  cursor: 'pointer',
+                  padding: '4px',
+                  borderRadius: '3px',
+                  opacity: currentHover ? 1 : 0,
+                  transition: 'opacity 80ms, color 80ms',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = GH.dangerFg; }}
+                onMouseLeave={e => { e.currentTarget.style.color = GH.fgSubtle; }}
+              >
+                <IcoTrash />
+              </button>
+            )}
           </div>
 
           {history.length === 0 ? (
