@@ -9,10 +9,12 @@ import type { SuggestionSection } from '../utils/suggestions';
  * underscore-delimited segment gets its own labeled group, stacked
  * vertically; a fresh "_" starts a new group rather than mixing
  * suggestions across independent words. Every chip shows the full
- * alternate word (not just the swapped letter), one per line — the one
- * currently typed included and highlighted, so they read as one
- * comparable list top-to-bottom instead of a wrapped horizontal row.
- * Clicking a non-current chip applies that swap to just its segment.
+ * alternate word (not just the swapped letter), one per line. Only the
+ * *other* spellings are listed — not the one already typed, since the
+ * user can already see that in the Roman input above and repeating it
+ * back read as noise (e.g. typing "thang_nay" should offer "theng" and
+ * "ney", not also echo "thang" and "nay"). Clicking a chip applies that
+ * swap to just its segment.
  */
 export function Suggestions({
   sections,
@@ -43,12 +45,11 @@ export function Suggestions({
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {section.groups.map(group => (
-              group.options.map(option => (
+              group.options.filter(option => !option.isCurrent).map(option => (
                 <SuggestionChip
                   key={`${group.tokenIndex}-${option.key}`}
                   roman={option.roman}
                   unicode={option.unicode}
-                  isCurrent={option.isCurrent}
                   onClick={() => onApply(section.segmentIndex, option.roman)}
                 />
               ))
@@ -63,22 +64,20 @@ export function Suggestions({
 function SuggestionChip({
   roman,
   unicode,
-  isCurrent,
   onClick,
 }: {
   roman: string;
   unicode: string;
-  isCurrent: boolean;
   onClick: () => void;
 }) {
   const [hover, setHover] = useState(false);
 
   return (
     <button
-      onClick={isCurrent ? undefined : onClick}
+      onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      title={isCurrent ? `${roman} — what you've typed` : `Switch to "${roman}"`}
+      title={`Switch to "${roman}"`}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -86,13 +85,13 @@ function SuggestionChip({
         width: '100%',
         padding: '5px 8px',
         borderRadius: '6px',
-        border: `1px solid ${isCurrent ? GH.accentFg : hover ? GH.accentFg : GH.borderDefault}`,
-        backgroundColor: isCurrent ? GH.accentSubtle : hover ? GH.accentSubtle : GH.canvasDefault,
+        border: `1px solid ${hover ? GH.accentFg : GH.borderDefault}`,
+        backgroundColor: hover ? GH.accentSubtle : GH.canvasDefault,
         color: GH.fgDefault,
         fontFamily: 'inherit',
         fontSize: 'var(--fs-13)',
         textAlign: 'left',
-        cursor: isCurrent ? 'default' : 'pointer',
+        cursor: 'pointer',
         transition: 'background-color 80ms, border-color 80ms',
       }}
     >
@@ -100,8 +99,7 @@ function SuggestionChip({
         flexShrink: 0,
         fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
         fontSize: 'var(--fs-11)',
-        color: isCurrent ? GH.accentFg : GH.fgMuted,
-        fontWeight: isCurrent ? 600 : 400,
+        color: GH.fgMuted,
         maxWidth: '45%',
         overflow: 'hidden',
         textOverflow: 'ellipsis',

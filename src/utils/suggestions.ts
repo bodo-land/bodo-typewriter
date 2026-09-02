@@ -67,6 +67,14 @@ function isContextSensitiveBeforeVowel(key: string, nextToken: { kind: string } 
  * "here's what you have, and here's what else you could have meant" as
  * one comparable list of full words (e.g. "fwr → फोर", "fOr → फ्व्र",
  * "for → फर"), not just the single swapped letter.
+ *
+ * Most families are matched against a single token's raw text. The
+ * "ai"/"ae" family is the exception: "ai" tokenizes as one token, but
+ * "ae" tokenizes as two adjacent vowel tokens ('a' then 'e'), since "ae"
+ * isn't a direct mapping of its own. So at each position this first tries
+ * matching a *pair* of adjacent tokens' concatenated raw text (to catch
+ * "ae"), and only falls back to the single token if that pair doesn't
+ * belong to any family — letting the same family work in both directions.
  */
 export function getSuggestionSections(romanBuffer: string): SuggestionSection[] {
   if (!romanBuffer) return [];
@@ -80,24 +88,30 @@ export function getSuggestionSections(romanBuffer: string): SuggestionSection[] 
     const tokens = tokenize(segment);
     const groups: SuggestionGroup[] = [];
 
-    tokens.forEach((token, tokenIndex) => {
-      const family = familyFor(token.raw);
-      if (!family) return;
+    let i = 0;
+    while (i < tokens.length) {
+      const pairRaw = i + 1 < tokens.length ? tokens[i].raw + tokens[i + 1].raw : undefined;
+      const pairFamily = pairRaw ? familyFor(pairRaw) : undefined;
+      const span = pairFamily ? 2 : 1;
+      const raw = pairFamily ? pairRaw! : tokens[i].raw;
+      const family = pairFamily ?? familyFor(tokens[i].raw);
 
-      const before = tokens.slice(0, tokenIndex).map(t => t.raw).join('');
-      const after = tokens.slice(tokenIndex + 1).map(t => t.raw).join('');
+      if (!family) { i += 1; continue; }
+
+      const before = tokens.slice(0, i).map(t => t.raw).join('');
+      const after = tokens.slice(i + span).map(t => t.raw).join('');
       const seenOutputs = new Set<string>();
       const options: SuggestionOption[] = [];
 
       const currentUnicode = transliterate(segment);
       seenOutputs.add(currentUnicode);
-      options.push({ key: token.raw, roman: segment, unicode: currentUnicode, isCurrent: true });
+      options.push({ key: raw, roman: segment, unicode: currentUnicode, isCurrent: true });
 
-      const nextToken = tokens[tokenIndex + 1];
+      const nextToken = tokens[i + span];
 
       for (const altKey of family) {
-        if (altKey === token.raw) continue;
-        if (isContextSensitiveBeforeVowel(altKey, nextToken)) continue;
+        if (altKey === raw) continue;
+        if (span === 1 && isContextSensitiveBeforeVowel(altKey, nextToken)) continue;
         const roman = before + altKey + after;
         const unicode = transliterate(roman);
         if (seenOutputs.has(unicode)) continue;
@@ -107,9 +121,11 @@ export function getSuggestionSections(romanBuffer: string): SuggestionSection[] 
 
       // A group of one (just the current spelling, no real alternatives) isn't useful.
       if (options.length > 1) {
-        groups.push({ tokenIndex, options: options.slice(0, MAX_OPTIONS_PER_GROUP) });
+        groups.push({ tokenIndex: i, options: options.slice(0, MAX_OPTIONS_PER_GROUP) });
       }
-    });
+
+      i += span;
+    }
 
     if (groups.length > 0) sections.push({ segmentIndex, segment, groups });
   });
