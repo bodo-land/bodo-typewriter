@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { GH, s, THEME_KEY, type Theme } from './styles/theme';
+import { useSessionManager } from './hooks/useSessionManager';
 import { Header } from './components/Header';
 import { PanelHeader } from './components/PanelHeader';
+import { Sidebar } from './components/Sidebar';
 import { EditorPanel } from './components/EditorPanel';
 import { ReferencePanel } from './components/ReferencePanel';
 import { BottomBar } from './components/BottomBar';
@@ -24,9 +26,13 @@ function getInitialTheme(): Theme {
 export default function App() {
   const [imeActive, setImeActive] = useState(true);
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleIme = useCallback(() => setImeActive(v => !v), []);
   const toggleTheme = useCallback(() => setTheme(t => (t === 'dark' ? 'light' : 'dark')), []);
+  const toggleSidebar = useCallback(() => setSidebarOpen(v => !v), []);
+
+  const session = useSessionManager();
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -39,27 +45,54 @@ export default function App() {
 
   return (
     <div className="app-shell" style={s.page}>
-      <Header imeActive={imeActive} onToggleIme={toggleIme} theme={theme} onToggleTheme={toggleTheme} />
+      <Header
+        imeActive={imeActive}
+        onToggleIme={toggleIme}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={toggleSidebar}
+      />
 
-      {/* Fluid two-column grid — fills the full viewport width/height;
-          collapses to a single scrolling column below 860px (index.css). */}
-      <div className="main-grid" style={s.mainGrid}>
-        <div className="panel-card" style={s.card({ ...s.panelCard, padding: '20px' })}>
-          <PanelHeader
-            icon={<IcoKeyboard />}
-            title="Transliterator"
-            right={
-              <span style={s.label(GH.successFg, GH.successSubtle, 'transparent')}>
-                <StatusDot active /> Live
-              </span>
-            }
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+        {sidebarOpen && (
+          <Sidebar
+            history={session.history}
+            currentPreview={session.paragraph || session.romanParagraph}
+            onNewSession={session.startNewSession}
+            onRestore={session.restoreSession}
           />
-          <EditorPanel imeActive={imeActive} onToggleIme={toggleIme} />
-        </div>
+        )}
 
-        <div className="panel-card" style={s.card({ ...s.panelCard, padding: '20px' })}>
-          <PanelHeader icon={<IcoBook />} title="Script Reference" />
-          <ReferencePanel />
+        {/* Fluid two-column grid — fills the remaining width/height; collapses
+            to a single scrolling column below 860px (index.css). */}
+        <div className="main-grid" style={s.mainGrid}>
+          <div className="panel-card" style={s.card({ ...s.panelCard, padding: '20px' })}>
+            <PanelHeader
+              icon={<IcoKeyboard />}
+              title="Transliterator"
+              right={
+                <span style={s.label(GH.successFg, GH.successSubtle, 'transparent')}>
+                  <StatusDot active /> Live
+                </span>
+              }
+            />
+            <EditorPanel
+              imeActive={imeActive}
+              onToggleIme={toggleIme}
+              ime={session.ime}
+              paragraph={session.paragraph}
+              romanParagraph={session.romanParagraph}
+              setParagraph={session.setParagraph}
+              setRomanParagraph={session.setRomanParagraph}
+              resetAll={session.resetAll}
+            />
+          </div>
+
+          <div className="panel-card" style={s.card({ ...s.panelCard, padding: '20px' })}>
+            <PanelHeader icon={<IcoBook />} title="Script Reference" />
+            <ReferencePanel />
+          </div>
         </div>
       </div>
 

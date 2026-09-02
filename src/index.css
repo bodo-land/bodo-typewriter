@@ -85,6 +85,9 @@ html, body { margin: 0; height: 100%; }
   .app-shell { height: auto; min-height: 100dvh; overflow: visible; }
   .main-grid { grid-template-columns: 1fr !important; }
   .panel-card { min-height: 60vh; }
+  /* No room for a persistent sidebar on narrow screens — the session
+     history it shows is still reachable once the layout has more room. */
+  .sidebar { display: none !important; }
 }
 
 @keyframes composing-fade-in {

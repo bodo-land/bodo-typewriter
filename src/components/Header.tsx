@@ -1,22 +1,33 @@
 import { GH, s, type Theme } from '../styles/theme';
 import { Btn } from './Btn';
 import { StatusDot } from './StatusDot';
-import { IcoKeyboard, IcoSun, IcoMoon } from './icons';
+import { IcoKeyboard, IcoSun, IcoMoon, IcoSidebar } from './icons';
 
 export function Header({
   imeActive,
   onToggleIme,
   theme,
   onToggleTheme,
+  sidebarOpen,
+  onToggleSidebar,
 }: {
   imeActive: boolean;
   onToggleIme: () => void;
   theme: Theme;
   onToggleTheme: () => void;
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
 }) {
   return (
     <header style={s.header}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <Btn
+          variant="secondary"
+          onClick={onToggleSidebar}
+          title={sidebarOpen ? 'Hide session history sidebar' : 'Show session history sidebar'}
+        >
+          <IcoSidebar />
+        </Btn>
         <span style={{
           fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
           fontSize: 'var(--fs-20)',
