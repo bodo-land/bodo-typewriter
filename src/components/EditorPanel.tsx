@@ -1,10 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { IMEState } from '../hooks/useBodoIME';
 import { transliterate } from '../engine/transliterator';
+import { getSuggestionSections, applySuggestionToBuffer } from '../utils/suggestions';
 import { GH, s } from '../styles/theme';
 import { Btn, CopyBtn, DownloadBtn } from './Btn';
 import { Key } from './Key';
 import { StatusDot } from './StatusDot';
+import { Suggestions } from './Suggestions';
 import { IcoTrash, IcoCheck, IcoX } from './icons';
 
 const TIP_DISMISSED_KEY = 'bodo-typewriter:tip-dismissed';
@@ -62,6 +64,13 @@ export function EditorPanel({
     onClear();
     setPlainRoman('');
   }, [onClear]);
+
+  const suggestionSections = useMemo(() => getSuggestionSections(ime.romanBuffer), [ime.romanBuffer]);
+
+  const applySuggestion = useCallback((segmentIndex: number, roman: string) => {
+    ime.setRoman(applySuggestionToBuffer(ime.romanBuffer, segmentIndex, roman));
+    ime.ref.current?.focus();
+  }, [ime]);
 
   const charCount = [...paragraph].length;
   const lineCount = paragraph ? paragraph.split('\n').length : 0;
@@ -180,6 +189,10 @@ export function EditorPanel({
               }} />
             </span>
           </div>
+        )}
+
+        {imeActive && ime.romanBuffer && (
+          <Suggestions sections={suggestionSections} onApply={applySuggestion} />
         )}
 
         {!imeActive && (
