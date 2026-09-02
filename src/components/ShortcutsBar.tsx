@@ -1,8 +1,9 @@
 import { GH } from '../styles/theme';
 import { Key } from './Key';
 
-// Shortcuts + footer, merged into one slim strip.
-export function BottomBar() {
+// Keyboard shortcuts reference + footer link, in one slim strip pinned to
+// the top of the app (right below the header) so it's always visible.
+export function ShortcutsBar() {
   const items = [
     { key: 'F9',        label: 'Toggle IME' },
     { key: 'Space',     label: 'Commit word' },
@@ -15,7 +16,7 @@ export function BottomBar() {
   return (
     <div style={{
       flexShrink: 0,
-      borderTop: `1px solid ${GH.borderMuted}`,
+      borderBottom: `1px solid ${GH.borderMuted}`,
       backgroundColor: GH.canvasSubtle,
       padding: '10px clamp(16px, 3vw, 40px)',
       display: 'flex',

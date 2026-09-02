@@ -6,7 +6,7 @@ import { PanelHeader } from './components/PanelHeader';
 import { Sidebar } from './components/Sidebar';
 import { EditorPanel } from './components/EditorPanel';
 import { ReferencePanel } from './components/ReferencePanel';
-import { BottomBar } from './components/BottomBar';
+import { ShortcutsBar } from './components/ShortcutsBar';
 import { StatusDot } from './components/StatusDot';
 import { IcoKeyboard, IcoBook } from './components/icons';
 import './App.css';
@@ -54,6 +54,8 @@ export default function App() {
         onToggleSidebar={toggleSidebar}
       />
 
+      <ShortcutsBar />
+
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         {sidebarOpen && (
           <Sidebar
@@ -95,8 +97,6 @@ export default function App() {
           </div>
         </div>
       </div>
-
-      <BottomBar />
     </div>
   );
 }
