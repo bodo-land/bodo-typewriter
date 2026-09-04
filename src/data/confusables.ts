@@ -2,18 +2,29 @@
  * Groups of English keys that are easy to mix up while typing, each producing
  * a different Bodo Devanagari result.
  *
- * WORK IN PROGRESS — deliberately narrowed to 4 case pairs for now (the
- * rest of the previously-explored set — o/O/w, u/U, m/M, h/H, the t/d/n
- * retroflex families, b/B, l/L, and the s/sh/x sibilant group — is parked,
- * not deleted permanently; re-add groups here one at a time as they're
- * revisited).
+ * Every unaspirated/aspirated consonant pair in mappings.ts is covered here
+ * as a trailing-'h' pair (checked directly against transliterate() output,
+ * not just read off the table) — capital-letter case-variants (C, J, etc.)
+ * are deliberately excluded even where they'd also work, in favor of the
+ * plain lowercase '+h' spelling everywhere.
+ * Still parked (not deleted, not yet re-checked): o/O/w, u/U, m/M, h/H,
+ * the N retroflex nasal, l/L, and the x sibilant.
  *
- * Each pair below is same-letter-different-case, checked against
- * src/engine/mappings.ts:
- *   - 'c'/'C' → च vs छ (unaspirated vs aspirated) — genuinely different.
- *   - 'j'/'J' → ज vs झ (unaspirated vs aspirated) — genuinely different.
- *   - 'i'/'I' → इ (vowel) vs य (consonant) — genuinely different, and the
- *     most dangerous of the four since it crosses categories.
+ *   - 'c'/'ch' → च vs छ.
+ *   - 'j'/'jh' → ज vs झ.
+ *   - 'k'/'kh' → क vs ख.
+ *   - 'g'/'gh' → ग vs घ.
+ *   - 'T'/'Th' → ट vs ठ.
+ *   - 'D'/'Dh' → ड vs ढ.
+ *   - 't'/'th' → त vs थ.
+ *   - 'd'/'dh' → द vs ध.
+ *   - 'p'/'ph' → प vs फ.
+ *   - 'b'/'bh' → ब vs भ.
+ *   - 's'/'sh' → स vs श.
+ *   - 'i'/'I' → इ vs ई, short/long vowel pair (same pattern as u/U for
+ *     उ/ऊ). Capital 'I' used to alias य (a consonant) instead, making
+ *     this the most dangerous pair in the set since it crossed
+ *     categories — fixed directly in mappings.ts, not just here.
  *   - 'a'/'A' → both आ, in every context (standalone and after a
  *     consonant) — a confirmed no-op between just the two of them:
  *     getSuggestions() only ever offers an alternative that produces
@@ -39,8 +50,17 @@
  *     three suggests the other two.
  */
 export const CONFUSABLE_FAMILIES: string[][] = [
-  ['c', 'C'],
-  ['j', 'J'],
+  ['c', 'ch'],
+  ['j', 'jh'],
+  ['k', 'kh'],
+  ['g', 'gh'],
+  ['T', 'Th'],
+  ['D', 'Dh'],
+  ['t', 'th'],
+  ['d', 'dh'],
+  ['p', 'ph'],
+  ['b', 'bh'],
+  ['s', 'sh'],
   ['a', 'A', 'e'],
   ['i', 'I'],
   ['ai', 'ae', 'ay'],
