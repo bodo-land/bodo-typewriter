@@ -1,6 +1,6 @@
 import { GH } from '../styles/theme';
 import { Tabs } from './Tabs';
-import { ChartTable } from './ChartTable';
+import { LetterKeyGrid } from './LetterKeyGrid';
 import { ConsonantKeyRail } from './ConsonantKeyRail';
 import { Suggestions } from './Suggestions';
 import { IcoBook, IcoKeyboard, IcoPencil } from './icons';
@@ -42,10 +42,12 @@ export function ReferencePanel({
         {tab === 'vowels' && (
           <>
             <p style={{ margin: '10px 0 8px', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
-              Bodo Devanagari vowels — independent form, dependent diacritic (mātrā) form,
-              and English transcription.
+              Bodo Devanagari vowels — the English key that types each one in this engine.
             </p>
-            <ChartTable rows={VOWEL_REF} showDiacritic />
+            <LetterKeyGrid
+              items={VOWEL_REF.map(row => ({ devanagari: row.output, key: row.english }))}
+              groupSizes={[4, 3, 4, 3]}
+            />
           </>
         )}
         {tab === 'consonants' && (
