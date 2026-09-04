@@ -25,6 +25,8 @@ import {
   loadHistory,
   saveHistory,
   newSessionId,
+  buildBackup,
+  mergeBackupIntoHistory,
 } from '../utils/sessionStorage';
 
 export type SessionManager = {
@@ -50,6 +52,14 @@ export type SessionManager = {
   deleteCurrentSession: () => void;
   restoreSession: (id: string) => void;
   deleteSession: (id: string) => void;
+  /** Current session + history, as a JSON string ready to hand to a file download. */
+  exportBackup: () => string;
+  /**
+   * Merges a parsed backup file into history (never touches the live
+   * current session). Returns how many sessions were found in the file.
+   * Throws if `raw` isn't a recognizable backup.
+   */
+  importBackup: (raw: unknown) => number;
 };
 
 export function useSessionManager(): SessionManager {
@@ -179,6 +189,15 @@ export function useSessionManager(): SessionManager {
     });
   }, []);
 
+  const exportBackup = useCallback(() => JSON.stringify(buildBackup(), null, 2), []);
+
+  const importBackup = useCallback((raw: unknown) => {
+    const { history: merged, importedCount } = mergeBackupIntoHistory(raw, history);
+    setHistory(merged);
+    saveHistory(merged);
+    return importedCount;
+  }, [history]);
+
   return {
     ime,
     paragraph,
@@ -196,5 +215,7 @@ export function useSessionManager(): SessionManager {
     deleteCurrentSession,
     restoreSession,
     deleteSession,
+    exportBackup,
+    importBackup,
   };
 }

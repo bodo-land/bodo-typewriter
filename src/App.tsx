@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { GH, s, THEME_KEY, type Theme } from './styles/theme';
 import { useSessionManager } from './hooks/useSessionManager';
 import { getSuggestionSections, applySuggestionToBuffer } from './utils/suggestions';
+import { downloadTextFile } from './utils/download';
 import { Header } from './components/Header';
 import { IconRail } from './components/IconRail';
 import { Sidebar } from './components/Sidebar';
@@ -129,6 +130,26 @@ export default function App() {
 
   const session = useSessionManager();
 
+  const handleExport = useCallback(() => {
+    const json = session.exportBackup();
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadTextFile(`bodo-typewriter-backup-${stamp}.json`, json);
+  }, [session]);
+
+  const handleImport = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        const count = session.importBackup(parsed);
+        alert(count > 0 ? `Imported ${count} session${count === 1 ? '' : 's'} into history.` : 'That backup had no sessions to import.');
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Could not read that file.');
+      }
+    };
+    reader.readAsText(file);
+  }, [session]);
+
   const suggestionSections = useMemo(
     () => getSuggestionSections(session.ime.englishBuffer),
     [session.ime.englishBuffer],
@@ -197,6 +218,8 @@ export default function App() {
           onToggleSidebar={toggleSidebar}
           referenceOpen={referenceOpen}
           onToggleReference={toggleReference}
+          onExport={handleExport}
+          onImport={handleImport}
         />
 
         {/* Shared padded row — Sidebar, the Transliterator/RightPanel grid,

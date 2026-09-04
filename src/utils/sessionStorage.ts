@@ -79,3 +79,54 @@ export function saveHistory(history: Session[]): void {
 export function newSessionId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
 }
+
+export type SessionBackup = {
+  version: 1;
+  exportedAt: number;
+  current: Session | null;
+  history: Session[];
+};
+
+/** Everything currently in localStorage, bundled for a file download. */
+export function buildBackup(): SessionBackup {
+  return {
+    version: 1,
+    exportedAt: Date.now(),
+    current: loadCurrentSession(),
+    history: loadHistory(),
+  };
+}
+
+/**
+ * Merges a parsed backup file into the existing history — deliberately
+ * never touches the live current session, so importing a backup can
+ * never clobber whatever the user is actively working on. The backup's
+ * own "current" (if it held anything) is folded in as just another
+ * history entry. Every incoming session gets a fresh id (so it can never
+ * collide with a local one), then everything is sorted newest-first and
+ * capped at MAX_HISTORY — imported sessions can push older local ones
+ * out, same as any other new session would.
+ *
+ * Throws if `raw` doesn't look like a backup this app produced.
+ */
+export function mergeBackupIntoHistory(
+  raw: unknown,
+  existingHistory: Session[],
+): { history: Session[]; importedCount: number } {
+  const backup = raw as Partial<SessionBackup> | null;
+  if (!backup || typeof backup !== 'object' || !Array.isArray(backup.history)) {
+    throw new Error('That file doesn’t look like a Bodo Typewriter backup.');
+  }
+
+  const incoming: Session[] = [...backup.history];
+  if (backup.current && !isEmptySession(backup.current)) {
+    incoming.push(backup.current);
+  }
+  const withFreshIds = incoming.map(s => ({ ...s, id: newSessionId() }));
+
+  const merged = [...withFreshIds, ...existingHistory]
+    .sort((a, b) => b.savedAt - a.savedAt)
+    .slice(0, MAX_HISTORY);
+
+  return { history: merged, importedCount: withFreshIds.length };
+}
