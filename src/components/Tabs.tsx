@@ -13,7 +13,6 @@ export function Tabs({
     <div style={{
       display: 'flex',
       borderBottom: `1px solid ${GH.borderDefault}`,
-      overflowX: 'auto',
       gap: '0',
     }}>
       {tabs.map(tab => {
