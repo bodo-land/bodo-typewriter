@@ -130,11 +130,11 @@ export default function App() {
   const session = useSessionManager();
 
   const suggestionSections = useMemo(
-    () => getSuggestionSections(session.ime.romanBuffer),
-    [session.ime.romanBuffer],
+    () => getSuggestionSections(session.ime.englishBuffer),
+    [session.ime.englishBuffer],
   );
-  const applySuggestion = useCallback((segmentIndex: number, roman: string) => {
-    session.ime.setRoman(applySuggestionToBuffer(session.ime.romanBuffer, segmentIndex, roman));
+  const applySuggestion = useCallback((segmentIndex: number, english: string) => {
+    session.ime.setEnglish(applySuggestionToBuffer(session.ime.englishBuffer, segmentIndex, english));
     session.ime.ref.current?.focus();
   }, [session.ime]);
   const hasSuggestions = imeActive && suggestionSections.length > 0;
@@ -194,7 +194,7 @@ export default function App() {
         {sidebarOpen && (
           <Sidebar
             history={session.history}
-            currentRoman={session.romanParagraph}
+            currentEnglish={session.englishParagraph}
             currentDevanagari={session.paragraph}
             currentTitle={session.currentTitle}
             currentSavedAt={session.currentSavedAt}
@@ -258,9 +258,9 @@ export default function App() {
                 onToggleIme={toggleIme}
                 ime={session.ime}
                 paragraph={session.paragraph}
-                romanParagraph={session.romanParagraph}
+                englishParagraph={session.englishParagraph}
                 setParagraph={session.setParagraph}
-                setRomanParagraph={session.setRomanParagraph}
+                setEnglishParagraph={session.setEnglishParagraph}
                 onClear={session.startNewSession}
                 onSave={session.saveNow}
                 justSaved={session.justSaved}

@@ -9,16 +9,16 @@ import { LineNumberedTextarea } from './LineNumberedTextarea';
 import { IcoTrash, IcoCheck, IcoSave, IcoX } from './icons';
 
 const TIP_DISMISSED_KEY = 'bodo-typewriter:tip-dismissed';
-const ROMAN_INPUT_MAX = 5000;
+const ENGLISH_INPUT_MAX = 5000;
 
 export function EditorPanel({
   imeActive,
   onToggleIme,
   ime,
   paragraph,
-  romanParagraph,
+  englishParagraph,
   setParagraph,
-  setRomanParagraph,
+  setEnglishParagraph,
   onClear,
   onSave,
   justSaved,
@@ -27,14 +27,14 @@ export function EditorPanel({
   onToggleIme: () => void;
   ime: IMEState;
   paragraph: string;
-  romanParagraph: string;
+  englishParagraph: string;
   setParagraph: (value: string) => void;
-  setRomanParagraph: (value: string) => void;
+  setEnglishParagraph: (value: string) => void;
   onClear: () => void;
   onSave: () => void;
   justSaved: boolean;
 }) {
-  const [plainRoman, setPlainRoman] = useState('');
+  const [plainEnglish, setPlainEnglish] = useState('');
   const [tipDismissed, setTipDismissed] = useState(() => {
     try {
       return localStorage.getItem(TIP_DISMISSED_KEY) === '1';
@@ -63,12 +63,12 @@ export function EditorPanel({
 
   const handleClear = useCallback(() => {
     onClear();
-    setPlainRoman('');
+    setPlainEnglish('');
   }, [onClear]);
 
-  const romanInputValue = imeActive ? ime.romanBuffer : plainRoman;
-  const romanChars = [...romanParagraph].length;
-  const romanLines = romanParagraph ? romanParagraph.split('\n').length : 0;
+  const englishInputValue = imeActive ? ime.englishBuffer : plainEnglish;
+  const englishChars = [...englishParagraph].length;
+  const englishLines = englishParagraph ? englishParagraph.split('\n').length : 0;
   const devaChars = [...paragraph].length;
   const devaLines = paragraph ? paragraph.split('\n').length : 0;
 
@@ -89,8 +89,8 @@ export function EditorPanel({
           color: GH.fgDefault,
         }}>
           <span style={{ flex: 1 }}>
-            <strong>Tip:</strong> type Roman below — each word you finish with Space/Enter
-            gets added to both "Roman paragraph" and "Devanagari paragraph" underneath.
+            <strong>Tip:</strong> type English below — each word you finish with Space/Enter
+            gets added to both "English paragraph" and "Devanagari paragraph" underneath.
             Both boxes are freely editable on their own too.
           </span>
           <button
@@ -112,23 +112,23 @@ export function EditorPanel({
       )}
 
       <div style={{ flexShrink: 0 }}>
-        <span style={s.sectionLabel}>Roman input</span>
+        <span style={s.sectionLabel}>English input</span>
         <LineNumberedTextarea
           ref={imeActive ? ime.ref : undefined}
           minHeight="110px"
-          value={romanInputValue}
-          onChange={e => { if (!imeActive) setPlainRoman(e.target.value); }}
+          value={englishInputValue}
+          onChange={e => { if (!imeActive) setPlainEnglish(e.target.value); }}
           onKeyDown={handleKeyDown}
           onPaste={imeActive ? ime.handlePaste : undefined}
-          placeholder={imeActive ? 'Type in Roman — e.g. bwdw → बोदो\nkhalam_dwng → खालामदों' : 'IME off — typing in English'}
+          placeholder={imeActive ? 'Type in English — e.g. bwdw → बोदो\nkhalam_dwng → खालामदों' : 'IME off — typing plain English (no transliteration)'}
           spellCheck={false}
-          maxLength={ROMAN_INPUT_MAX}
-          stats={`${romanInputValue.length} / ${ROMAN_INPUT_MAX}`}
-          aria-label="Roman transliteration input"
+          maxLength={ENGLISH_INPUT_MAX}
+          stats={`${englishInputValue.length} / ${ENGLISH_INPUT_MAX}`}
+          aria-label="English transliteration input"
         />
 
         {/* Composing hint */}
-        {imeActive && ime.romanBuffer && (
+        {imeActive && ime.englishBuffer && (
           <div style={{
             marginTop: '8px',
             display: 'flex',
@@ -155,7 +155,7 @@ export function EditorPanel({
               Composing
             </span>
 
-            <Key k={ime.romanBuffer} />
+            <Key k={ime.englishBuffer} />
 
             <span style={{ color: GH.fgSubtle, fontSize: 'var(--fs-14)', flexShrink: 0 }}>→</span>
 
@@ -166,7 +166,7 @@ export function EditorPanel({
               color: GH.fgDefault,
               wordBreak: 'break-all',
             }}>
-              {transliterate(ime.romanBuffer)}
+              {transliterate(ime.englishBuffer)}
               <span style={{
                 display: 'inline-block',
                 width: '2px',
@@ -200,38 +200,38 @@ export function EditorPanel({
       <div style={{ ...s.divider, flexShrink: 0 }} />
 
       {/*
-        Roman paragraph — a plain, independent textarea just like the
+        English paragraph — a plain, independent textarea just like the
         Devanagari paragraph below: Backspace/typing here is native browser
         behaviour and only ever touches THIS box. It's populated by
-        committed words' raw Roman form (via onCommit) but has no other
-        link back to Roman input — Backspace there can never reach text
+        committed words' raw English form (via onCommit) but has no other
+        link back to English input — Backspace there can never reach text
         that has landed here.
       */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
-          <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Roman paragraph</span>
+          <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>English paragraph</span>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <CopyBtn text={romanParagraph} />
+            <CopyBtn text={englishParagraph} />
             <Btn
               variant="danger"
               onClick={handleClear}
-              disabled={!paragraph && !romanParagraph && !ime.romanBuffer}
+              disabled={!paragraph && !englishParagraph && !ime.englishBuffer}
               title="Archive this session and clear both boxes"
             >
               <IcoTrash /> Clear
             </Btn>
-            <DownloadBtn text={romanParagraph} filename="bodo-roman.txt" title="Download as .txt" />
+            <DownloadBtn text={englishParagraph} filename="bodo-english.txt" title="Download as .txt" />
           </div>
         </div>
 
         <LineNumberedTextarea
           flex={1}
-          value={romanParagraph}
-          onChange={e => setRomanParagraph(e.target.value)}
-          placeholder="Your raw Roman keystrokes accumulate here as you commit words (Space/Enter) — or type directly…"
+          value={englishParagraph}
+          onChange={e => setEnglishParagraph(e.target.value)}
+          placeholder="Your raw English keystrokes accumulate here as you commit words (Space/Enter) — or type directly…"
           spellCheck={false}
-          stats={`${romanChars} chars • ${romanLines} line${romanLines === 1 ? '' : 's'}`}
-          aria-label="Roman paragraph output"
+          stats={`${englishChars} chars • ${englishLines} line${englishLines === 1 ? '' : 's'}`}
+          aria-label="English paragraph output"
         />
       </div>
 
@@ -247,7 +247,7 @@ export function EditorPanel({
             <Btn
               variant="danger"
               onClick={handleClear}
-              disabled={!paragraph && !romanParagraph && !ime.romanBuffer}
+              disabled={!paragraph && !englishParagraph && !ime.englishBuffer}
               title="Archive this session and clear both boxes"
             >
               <IcoTrash /> Clear
@@ -259,8 +259,8 @@ export function EditorPanel({
         {/*
           A plain, independent textarea: Backspace/typing here is native
           browser behaviour and only ever touches THIS box. It is populated
-          by committed words from Roman input (via onCommit) but has no
-          other link back to it — Backspace in Roman input can never reach
+          by committed words from English input (via onCommit) but has no
+          other link back to it — Backspace in English input can never reach
           text that has landed here.
         */}
         <LineNumberedTextarea

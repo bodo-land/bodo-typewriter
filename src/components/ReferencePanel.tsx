@@ -24,7 +24,7 @@ export function ReferencePanel({
   tab: string;
   onTabChange: (id: string) => void;
   suggestionSections: SuggestionSection[];
-  onApplySuggestion: (segmentIndex: number, roman: string) => void;
+  onApplySuggestion: (segmentIndex: number, english: string) => void;
 }) {
   const tabs = [
     { id: 'suggestions', label: 'Did You Mean', icon: <IcoPencil /> },
@@ -43,12 +43,19 @@ export function ReferencePanel({
           <>
             <p style={{ margin: '10px 0 8px', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
               Bodo Devanagari vowels — independent form, dependent diacritic (mātrā) form,
-              and Roman transcription.
+              and English transcription.
             </p>
             <ChartTable rows={VOWEL_REF} showDiacritic />
           </>
         )}
-        {tab === 'consonants' && <ConsonantKeyRail />}
+        {tab === 'consonants' && (
+          <>
+            <p style={{ margin: '10px 0 8px', fontSize: 'var(--fs-14)', color: GH.fgMuted }}>
+              Bodo Devanagari consonants — the English key that types each letter in this engine.
+            </p>
+            <ConsonantKeyRail />
+          </>
+        )}
         {tab === 'suggestions' && (
           suggestionSections.length > 0 ? (
             <div style={{ paddingTop: '8px' }}>

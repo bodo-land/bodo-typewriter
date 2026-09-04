@@ -86,7 +86,7 @@ const ALL_ENTRIES: Entry[] = [
 const ROOT = buildTrie(ALL_ENTRIES);
 
 /**
- * Tokenise a Roman-script input string into a sequence of typed tokens.
+ * Tokenise an English-script input string into a sequence of typed tokens.
  *
  * @example
  * tokenize('khan')

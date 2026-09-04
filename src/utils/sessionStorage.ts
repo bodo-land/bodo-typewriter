@@ -11,8 +11,8 @@
 export type Session = {
   id: string;
   paragraph: string;
-  romanParagraph: string;
-  romanBuffer: string;
+  englishParagraph: string;
+  englishBuffer: string;
   savedAt: number;
   /** User-given name, e.g. "Meeting notes". Absent means "untitled" — falls back to a text preview in the UI. */
   title?: string;
@@ -41,12 +41,27 @@ function saveJSON(key: string, value: unknown): void {
   }
 }
 
-export function isEmptySession(s: Pick<Session, 'paragraph' | 'romanParagraph' | 'romanBuffer'>): boolean {
-  return !s.paragraph && !s.romanParagraph && !s.romanBuffer;
+/**
+ * Sessions saved before the englishParagraph/englishBuffer rename used
+ * romanParagraph/romanBuffer — read those back so old saved sessions don't
+ * silently lose their text on first load after the rename.
+ */
+function migrateLegacySession(raw: unknown): Session {
+  const s = raw as Session & { romanParagraph?: string; romanBuffer?: string };
+  return {
+    ...s,
+    englishParagraph: s.englishParagraph ?? s.romanParagraph ?? '',
+    englishBuffer: s.englishBuffer ?? s.romanBuffer ?? '',
+  };
+}
+
+export function isEmptySession(s: Pick<Session, 'paragraph' | 'englishParagraph' | 'englishBuffer'>): boolean {
+  return !s.paragraph && !s.englishParagraph && !s.englishBuffer;
 }
 
 export function loadCurrentSession(): Session | null {
-  return loadJSON<Session | null>(CURRENT_KEY, null);
+  const session = loadJSON<Session | null>(CURRENT_KEY, null);
+  return session ? migrateLegacySession(session) : null;
 }
 
 export function saveCurrentSession(session: Session): void {
@@ -54,7 +69,7 @@ export function saveCurrentSession(session: Session): void {
 }
 
 export function loadHistory(): Session[] {
-  return loadJSON<Session[]>(HISTORY_KEY, []);
+  return loadJSON<Session[]>(HISTORY_KEY, []).map(migrateLegacySession);
 }
 
 export function saveHistory(history: Session[]): void {

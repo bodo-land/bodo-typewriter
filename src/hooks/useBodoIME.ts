@@ -1,9 +1,9 @@
 /**
- * useBodoIME — React hook that manages the Roman→Bodo composing buffer.
+ * useBodoIME — React hook that manages the English→Bodo composing buffer.
  *
  * Architecture
  * ─────────────
- * The hook owns exactly ONE piece of state: `romanBuffer`, the Roman
+ * The hook owns exactly ONE piece of state: `englishBuffer`, the English
  * keystrokes for the word currently being composed. It does NOT own any
  * "committed" / already-finished text — that lives wherever the caller
  * decides (see `onCommit` below). This is what lets a caller keep finished
@@ -13,7 +13,7 @@
  *
  * Word boundaries
  * ───────────────
- * Space and Enter both trigger a commit: the current romanBuffer is
+ * Space and Enter both trigger a commit: the current englishBuffer is
  * transliterated, a single space appended, and the result handed to
  * `onCommit`. The buffer is then cleared. Enter does NOT insert a hard
  * line break here — composing text always stays on one flowing line; a
@@ -36,7 +36,7 @@
  *
  * Backspace
  * ─────────
- * Smart backspace: removes the Roman character before the caret (or the
+ * Smart backspace: removes the English character before the caret (or the
  * selected range) and re-transliterates. No-op if the caret is already at
  * position 0 with nothing selected — it never reaches into previously
  * committed text (this is the fix for the "holding Backspace erases
@@ -55,31 +55,31 @@ import { transliterate } from '../engine/transliterator';
 export type UseBodoIMEOptions = {
   /**
    * Called on Space/Enter/paste with the finished word (+ boundary char),
-   * in both its transliterated Unicode form and its raw Roman form — e.g.
-   * a caller keeping parallel "Roman paragraph" and "Devanagari paragraph"
-   * stores appends unicodeText to one and romanText to the other.
+   * in both its transliterated Unicode form and its raw English form — e.g.
+   * a caller keeping parallel "English paragraph" and "Devanagari paragraph"
+   * stores appends unicodeText to one and englishText to the other.
    */
-  onCommit?: (unicodeText: string, romanText: string) => void;
+  onCommit?: (unicodeText: string, englishText: string) => void;
   /**
    * Initial value for the composing buffer (e.g. restoring a saved session).
    * Only read on first render, like a normal useState initializer.
    */
-  initialRoman?: string;
+  initialEnglish?: string;
 };
 
 export type IMEState = {
   /** Live transliteration preview of the current in-progress word only. */
   value: string;
-  /** Roman buffer for the current in-progress word */
-  romanBuffer: string;
+  /** English buffer for the current in-progress word */
+  englishBuffer: string;
   /** Attach to the host textarea — required for cursor-aware editing. */
   ref: React.RefObject<HTMLTextAreaElement | null>;
   /** Handle a keydown event on the host element */
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   /** Handle a paste event on the host element */
   handlePaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
-  /** Directly set the entire Roman buffer (e.g. for programmatic input) */
-  setRoman: (roman: string) => void;
+  /** Directly set the entire English buffer (e.g. for programmatic input) */
+  setEnglish: (english: string) => void;
   /** Clear the composing buffer (does not touch anything already committed) */
   reset: () => void;
 };
@@ -89,8 +89,8 @@ const COMMIT_CHARS = new Set([' ', 'Enter', '\n', '\r']);
 // Tab intentionally omitted — let the browser move focus normally (BUG-005).
 
 export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
-  const { onCommit, initialRoman } = options;
-  const [romanBuffer, setRomanBuffer] = useState(() => initialRoman ?? '');
+  const { onCommit, initialEnglish } = options;
+  const [englishBuffer, setEnglishBuffer] = useState(() => initialEnglish ?? '');
   const ref = useRef<HTMLTextAreaElement>(null);
   // Caret position to restore after a buffer edit — the textarea is
   // React-controlled, so setting .value alone would otherwise snap the
@@ -103,9 +103,9 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
       pendingCaret.current = null;
       ref.current.setSelectionRange(pos, pos);
     }
-  }, [romanBuffer]);
+  }, [englishBuffer]);
 
-  const value = transliterate(romanBuffer);
+  const value = transliterate(englishBuffer);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -115,34 +115,34 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       const target = e.currentTarget;
-      const selStart = target.selectionStart ?? romanBuffer.length;
-      const selEnd = target.selectionEnd ?? romanBuffer.length;
+      const selStart = target.selectionStart ?? englishBuffer.length;
+      const selEnd = target.selectionEnd ?? englishBuffer.length;
       const hasSelection = selStart !== selEnd;
 
-      // Smart backspace — deletes the selection, or the Roman character
+      // Smart backspace — deletes the selection, or the English character
       // before the caret. No-op at position 0 with nothing selected;
       // previously committed words are out of reach from here.
       if (key === 'Backspace') {
         e.preventDefault();
         if (hasSelection) {
           pendingCaret.current = selStart;
-          setRomanBuffer(prev => prev.slice(0, selStart) + prev.slice(selEnd));
+          setEnglishBuffer(prev => prev.slice(0, selStart) + prev.slice(selEnd));
         } else if (selStart > 0) {
           pendingCaret.current = selStart - 1;
-          setRomanBuffer(prev => prev.slice(0, selStart - 1) + prev.slice(selStart));
+          setEnglishBuffer(prev => prev.slice(0, selStart - 1) + prev.slice(selStart));
         }
         return;
       }
 
-      // Delete — removes the selection, or the Roman character after the caret.
+      // Delete — removes the selection, or the English character after the caret.
       if (key === 'Delete') {
         e.preventDefault();
         if (hasSelection) {
           pendingCaret.current = selStart;
-          setRomanBuffer(prev => prev.slice(0, selStart) + prev.slice(selEnd));
-        } else if (selStart < romanBuffer.length) {
+          setEnglishBuffer(prev => prev.slice(0, selStart) + prev.slice(selEnd));
+        } else if (selStart < englishBuffer.length) {
           pendingCaret.current = selStart;
-          setRomanBuffer(prev => prev.slice(0, selStart) + prev.slice(selStart + 1));
+          setEnglishBuffer(prev => prev.slice(0, selStart) + prev.slice(selStart + 1));
         }
         return;
       }
@@ -152,8 +152,8 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
       // "Word boundaries" above).
       if (COMMIT_CHARS.has(key)) {
         e.preventDefault();
-        onCommit?.(transliterate(romanBuffer) + ' ', romanBuffer + ' ');
-        setRomanBuffer('');
+        onCommit?.(transliterate(englishBuffer) + ' ', englishBuffer + ' ');
+        setEnglishBuffer('');
         return;
       }
 
@@ -162,13 +162,13 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
       if (key.length === 1) {
         e.preventDefault();
         pendingCaret.current = selStart + 1;
-        setRomanBuffer(prev => prev.slice(0, selStart) + key + prev.slice(selEnd));
+        setEnglishBuffer(prev => prev.slice(0, selStart) + key + prev.slice(selEnd));
         return;
       }
 
       // Arrow keys, Home, End, F-keys, etc. — let browser handle
     },
-    [romanBuffer, onCommit],
+    [englishBuffer, onCommit],
   );
 
   // Paste handler — commits current buffer + transliterated pasted text in
@@ -178,27 +178,27 @@ export function useBodoIME(options: UseBodoIMEOptions = {}): IMEState {
       e.preventDefault();
       const pasted = e.clipboardData.getData('text/plain');
       if (!pasted) return;
-      onCommit?.(transliterate(romanBuffer) + transliterate(pasted), romanBuffer + pasted);
-      setRomanBuffer('');
+      onCommit?.(transliterate(englishBuffer) + transliterate(pasted), englishBuffer + pasted);
+      setEnglishBuffer('');
     },
-    [romanBuffer, onCommit],
+    [englishBuffer, onCommit],
   );
 
-  const setRoman = useCallback((roman: string) => {
-    setRomanBuffer(roman);
+  const setEnglish = useCallback((english: string) => {
+    setEnglishBuffer(english);
   }, []);
 
   const reset = useCallback(() => {
-    setRomanBuffer('');
+    setEnglishBuffer('');
   }, []);
 
   return {
     value,
-    romanBuffer,
+    englishBuffer,
     ref,
     handleKeyDown,
     handlePaste,
-    setRoman,
+    setEnglish,
     reset,
   };
 }

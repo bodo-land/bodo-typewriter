@@ -4,19 +4,19 @@
  * pass/fail here.
  *
  * The files under tests/markdown/*.md are real Bodo prose in Devanagari
- * (e.g. pages of a grammar textbook) with no Roman-input counterpart. This
- * script lets you write your own guess at the Roman input for a passage,
+ * (e.g. pages of a grammar textbook) with no English-input counterpart. This
+ * script lets you write your own guess at the English input for a passage,
  * run it through the actual transliteration engine, and see line-by-line
  * where it agrees or disagrees with the reference text — without having
- * to write formal test assertions for text whose "correct" Roman spelling
+ * to write formal test assertions for text whose "correct" English spelling
  * is your own hypothesis, not a documented fact.
  *
  * Usage:
- *   npm run convert -- <romanInputFile>                  # just print the conversion
- *   npm run convert -- <romanInputFile> <referenceFile>   # convert + diff against reference
+ *   npm run convert -- <englishInputFile>                  # just print the conversion
+ *   npm run convert -- <englishInputFile> <referenceFile>   # convert + diff against reference
  *
  * A mismatch here is not necessarily an engine bug — it may just mean the
- * guessed Roman input doesn't match this engine's key scheme. See
+ * guessed English input doesn't match this engine's key scheme. See
  * docs/13-key-and-unicode-reference.md for the actual key → Unicode rules,
  * and docs/05-special-rules.md for the ng/halant/inherent-vowel rules.
  */
@@ -33,15 +33,15 @@ function firstDiffIndex(a: string, b: string): number {
 }
 
 function main() {
-  const [, , romanPath, referencePath] = process.argv;
+  const [, , englishPath, referencePath] = process.argv;
 
-  if (!romanPath) {
-    console.error('Usage: npm run convert -- <romanInputFile> [referenceFile]');
+  if (!englishPath) {
+    console.error('Usage: npm run convert -- <englishInputFile> [referenceFile]');
     process.exit(1);
   }
 
-  const romanText = readFileSync(romanPath, 'utf8');
-  const converted = transliterate(romanText);
+  const englishText = readFileSync(englishPath, 'utf8');
+  const converted = transliterate(englishText);
 
   if (!referencePath) {
     console.log(converted);

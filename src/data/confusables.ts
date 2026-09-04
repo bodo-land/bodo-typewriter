@@ -1,5 +1,5 @@
 /**
- * Groups of Roman keys that are easy to mix up while typing, each producing
+ * Groups of English keys that are easy to mix up while typing, each producing
  * a different Bodo Devanagari result.
  *
  * WORK IN PROGRESS — deliberately narrowed to 4 case pairs for now (the
@@ -27,7 +27,7 @@
  *     means "se" correctly offers just one "sa" suggestion (the dedupe
  *     in getSuggestionSections picks 'a' over 'A' since it comes first),
  *     not two near-identical "sa"/"sA" chips.
- *   - 'ai'/'ae'/'ay' → not single Roman keys but three spellings typists
+ *   - 'ai'/'ae'/'ay' → not single English keys but three spellings typists
  *     use for the same "ai"-ish sound, each tokenizing differently:
  *     "ai" is one diphthong token (नै), "ae" is two vowel tokens 'a'+'e'
  *     (नाए), and "ay" is a vowel token 'a' followed by the consonant 'y'

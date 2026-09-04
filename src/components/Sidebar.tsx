@@ -26,7 +26,7 @@ const CURRENT_TIMESTAMP_FORMAT = new Intl.DateTimeFormat(undefined, {
 
 export function Sidebar({
   history,
-  currentRoman,
+  currentEnglish,
   currentDevanagari,
   currentTitle,
   currentSavedAt,
@@ -39,7 +39,7 @@ export function Sidebar({
   onClose,
 }: {
   history: Session[];
-  currentRoman: string;
+  currentEnglish: string;
   currentDevanagari: string;
   currentTitle: string;
   currentSavedAt: number;
@@ -53,14 +53,14 @@ export function Sidebar({
 }) {
   const [currentHover, setCurrentHover] = useState(false);
   const [renamingCurrent, setRenamingCurrent] = useState(false);
-  const currentIsEmpty = !currentRoman.trim() && !currentDevanagari.trim();
+  const currentIsEmpty = !currentEnglish.trim() && !currentDevanagari.trim();
 
   return (
     <>
       <div className="sidebar-backdrop" onClick={onClose} />
       <aside className="sidebar" style={{
-        // Weight 20 alongside main-grid (65) and ConsonantKeyRail (15) in
-        // the shared contentRow flex row — a 20/65/15 split.
+        // Weight 20 alongside main-grid's 80 in the shared contentRow flex
+        // row — a 20/80 width split.
         flex: '20 1 0%',
         minWidth: 0,
         display: 'flex',
@@ -158,7 +158,7 @@ export function Sidebar({
                       {currentTitle}
                     </div>
                   )}
-                  {currentRoman.trim() && (
+                  {currentEnglish.trim() && (
                     <div style={{
                       fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
                       fontSize: 'var(--fs-11)',
@@ -167,7 +167,7 @@ export function Sidebar({
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                     }}>
-                      {currentRoman.trim()}
+                      {currentEnglish.trim()}
                     </div>
                   )}
                   <div style={{

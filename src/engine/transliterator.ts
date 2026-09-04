@@ -1,10 +1,10 @@
 /**
- * Core transliteration engine — Roman → Bodo Devanagari Unicode.
+ * Core transliteration engine — English → Bodo Devanagari Unicode.
  *
  * Processing pipeline
  * -------------------
  *
- *   Roman string
+ *   English string
  *       ↓  tokenize()         (longest-match trie, typed tokens)
  *   Token[]
  *       ↓  state machine
@@ -59,7 +59,7 @@ import { U } from './unicode';
 type State = 'initial' | 'after_consonant' | 'after_vowel';
 
 /**
- * Transliterate a Roman-script string into Bodo Devanagari Unicode (NFC).
+ * Transliterate an English-script string into Bodo Devanagari Unicode (NFC).
  *
  * @example
  * transliterate('bwdw')   → 'बोदो'
@@ -141,14 +141,4 @@ export function transliterate(input: string): string {
   }
 
   return out.normalize('NFC');
-}
-
-/**
- * Given a complete Roman input and a cursor position within it,
- * return the corresponding cursor position in the Unicode output.
- *
- * Used by cursor-tracking support (see docs/fixes_improvements/01-bug-tracker.md#BUG-003).
- */
-export function mapCursorPosition(roman: string, romanCursor: number): number {
-  return transliterate(roman.slice(0, romanCursor)).length;
 }

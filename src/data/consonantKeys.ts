@@ -1,5 +1,5 @@
 /**
- * Devanagari consonant → Roman key quick-reference, in classical varga
+ * Devanagari consonant → English key quick-reference, in classical varga
  * order (same layout as any Sanskrit/Hindi consonant chart). Unlike
  * data/referenceData.ts (which lists every accepted spelling, aliases
  * included), this picks exactly one canonical key per letter — the

@@ -7,7 +7,7 @@ import { IcoTrash, IcoPencil } from './icons';
 
 /**
  * One row in the sidebar's session list: relative time, an optional custom
- * title, a Roman preview line, and the Devanagari preview. Not a real
+ * title, an English preview line, and the Devanagari preview. Not a real
  * <button> (it has nested delete/rename buttons, and interactive elements
  * can't nest in valid HTML) — a div with button semantics instead,
  * clickable and keyboard-operable.
@@ -25,7 +25,7 @@ export function HistoryItem({
 }) {
   const [hover, setHover] = useState(false);
   const [renaming, setRenaming] = useState(false);
-  const roman = session.romanParagraph.trim();
+  const english = session.englishParagraph.trim();
   const devanagari = session.paragraph.trim();
 
   return (
@@ -76,7 +76,7 @@ export function HistoryItem({
                 {session.title}
               </div>
             )}
-            {roman && (
+            {english && (
               <div style={{
                 fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
                 fontSize: 'var(--fs-11)',
@@ -85,7 +85,7 @@ export function HistoryItem({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
               }}>
-                {roman}
+                {english}
               </div>
             )}
             <div style={{

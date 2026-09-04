@@ -4,14 +4,14 @@ import type { SuggestionSection } from '../utils/suggestions';
 
 /**
  * "Did you mean?" rail — meant to sit in EditorPanel's vertical suggestions
- * column (to the right of Roman input, inside the Transliterator card; see
- * EditorPanel's "Roman input" row), not inline with the text. Each
+ * column (to the right of English input, inside the Transliterator card;
+ * see EditorPanel's "English input" row), not inline with the text. Each
  * underscore-delimited segment gets its own labeled group, stacked
  * vertically; a fresh "_" starts a new group rather than mixing
  * suggestions across independent words. Every chip shows the full
  * alternate word (not just the swapped letter), one per line. Only the
  * *other* spellings are listed — not the one already typed, since the
- * user can already see that in the Roman input above and repeating it
+ * user can already see that in the English input above and repeating it
  * back read as noise (e.g. typing "thang_nay" should offer "theng" and
  * "ney", not also echo "thang" and "nay"). Clicking a chip applies that
  * swap to just its segment.
@@ -21,7 +21,7 @@ export function Suggestions({
   onApply,
 }: {
   sections: SuggestionSection[];
-  onApply: (segmentIndex: number, roman: string) => void;
+  onApply: (segmentIndex: number, english: string) => void;
 }) {
   if (sections.length === 0) return null;
 
@@ -48,9 +48,9 @@ export function Suggestions({
               group.options.filter(option => !option.isCurrent).map(option => (
                 <SuggestionChip
                   key={`${group.tokenIndex}-${option.key}`}
-                  roman={option.roman}
+                  english={option.english}
                   unicode={option.unicode}
-                  onClick={() => onApply(section.segmentIndex, option.roman)}
+                  onClick={() => onApply(section.segmentIndex, option.english)}
                 />
               ))
             ))}
@@ -62,11 +62,11 @@ export function Suggestions({
 }
 
 function SuggestionChip({
-  roman,
+  english,
   unicode,
   onClick,
 }: {
-  roman: string;
+  english: string;
   unicode: string;
   onClick: () => void;
 }) {
@@ -77,7 +77,7 @@ function SuggestionChip({
       onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      title={`Switch to "${roman}"`}
+      title={`Switch to "${english}"`}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -105,7 +105,7 @@ function SuggestionChip({
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
       }}>
-        {roman}
+        {english}
       </kbd>
       <span style={{ color: GH.fgSubtle, flexShrink: 0 }}>→</span>
       <span style={{

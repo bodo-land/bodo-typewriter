@@ -1,5 +1,5 @@
 /**
- * Owns the live editing session (paragraph + romanParagraph + the composing
+ * Owns the live editing session (paragraph + englishParagraph + the composing
  * buffer via useBodoIME) plus up to MAX_HISTORY archived sessions —
  * shared between the Sidebar (browse/restore/new/delete) and EditorPanel
  * (edit).
@@ -30,9 +30,9 @@ import {
 export type SessionManager = {
   ime: IMEState;
   paragraph: string;
-  romanParagraph: string;
+  englishParagraph: string;
   setParagraph: (value: string) => void;
-  setRomanParagraph: (value: string) => void;
+  setEnglishParagraph: (value: string) => void;
   /** User-given name for the current session, or '' for untitled. */
   currentTitle: string;
   renameCurrentSession: (title: string) => void;
@@ -58,14 +58,14 @@ export function useSessionManager(): SessionManager {
   const [savedSession] = useState(() => loadCurrentSession());
 
   const [paragraph, setParagraph] = useState(() => savedSession?.paragraph ?? '');
-  const [romanParagraph, setRomanParagraph] = useState(() => savedSession?.romanParagraph ?? '');
+  const [englishParagraph, setEnglishParagraph] = useState(() => savedSession?.englishParagraph ?? '');
   const [currentTitle, setCurrentTitle] = useState(() => savedSession?.title ?? '');
   const [currentSavedAt, setCurrentSavedAt] = useState(() => savedSession?.savedAt ?? Date.now());
   const ime = useBodoIME({
-    initialRoman: savedSession?.romanBuffer,
-    onCommit: (unicodeText, romanText) => {
+    initialEnglish: savedSession?.englishBuffer,
+    onCommit: (unicodeText, englishText) => {
       setParagraph(p => p + unicodeText);
-      setRomanParagraph(p => p + romanText);
+      setEnglishParagraph(p => p + englishText);
     },
   });
 
@@ -81,8 +81,8 @@ export function useSessionManager(): SessionManager {
     saveCurrentSession({
       id: 'current',
       paragraph,
-      romanParagraph,
-      romanBuffer: ime.romanBuffer,
+      englishParagraph,
+      englishBuffer: ime.englishBuffer,
       savedAt,
       title: currentTitle || undefined,
     });
@@ -90,7 +90,7 @@ export function useSessionManager(): SessionManager {
     setJustSaved(true);
     if (flashTimeout.current) clearTimeout(flashTimeout.current);
     flashTimeout.current = setTimeout(() => setJustSaved(false), 1500);
-  }, [paragraph, romanParagraph, ime.romanBuffer, currentTitle]);
+  }, [paragraph, englishParagraph, ime.englishBuffer, currentTitle]);
 
   useEffect(() => {
     if (!mounted.current) {
@@ -110,8 +110,8 @@ export function useSessionManager(): SessionManager {
     const snapshot: Session = {
       id: newSessionId(),
       paragraph,
-      romanParagraph,
-      romanBuffer: ime.romanBuffer,
+      englishParagraph,
+      englishBuffer: ime.englishBuffer,
       savedAt: Date.now(),
       title: currentTitle || undefined,
     };
@@ -122,21 +122,21 @@ export function useSessionManager(): SessionManager {
     }
     ime.reset();
     setParagraph('');
-    setRomanParagraph('');
+    setEnglishParagraph('');
     setCurrentTitle('');
     const savedAt = Date.now();
     setCurrentSavedAt(savedAt);
-    saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt });
-  }, [paragraph, romanParagraph, ime, history, currentTitle]);
+    saveCurrentSession({ id: 'current', paragraph: '', englishParagraph: '', englishBuffer: '', savedAt });
+  }, [paragraph, englishParagraph, ime, history, currentTitle]);
 
   const deleteCurrentSession = useCallback(() => {
     ime.reset();
     setParagraph('');
-    setRomanParagraph('');
+    setEnglishParagraph('');
     setCurrentTitle('');
     const savedAt = Date.now();
     setCurrentSavedAt(savedAt);
-    saveCurrentSession({ id: 'current', paragraph: '', romanParagraph: '', romanBuffer: '', savedAt });
+    saveCurrentSession({ id: 'current', paragraph: '', englishParagraph: '', englishBuffer: '', savedAt });
   }, [ime]);
 
   const restoreSession = useCallback((id: string) => {
@@ -146,8 +146,8 @@ export function useSessionManager(): SessionManager {
     const snapshot: Session = {
       id: newSessionId(),
       paragraph,
-      romanParagraph,
-      romanBuffer: ime.romanBuffer,
+      englishParagraph,
+      englishBuffer: ime.englishBuffer,
       savedAt: Date.now(),
       title: currentTitle || undefined,
     };
@@ -157,13 +157,13 @@ export function useSessionManager(): SessionManager {
     saveHistory(next);
 
     setParagraph(target.paragraph);
-    setRomanParagraph(target.romanParagraph);
+    setEnglishParagraph(target.englishParagraph);
     setCurrentTitle(target.title ?? '');
-    ime.setRoman(target.romanBuffer);
+    ime.setEnglish(target.englishBuffer);
     const savedAt = Date.now();
     setCurrentSavedAt(savedAt);
     saveCurrentSession({ ...target, id: 'current', savedAt });
-  }, [paragraph, romanParagraph, ime, history, currentTitle]);
+  }, [paragraph, englishParagraph, ime, history, currentTitle]);
 
   const deleteSession = useCallback((id: string) => {
     const next = history.filter(sess => sess.id !== id);
@@ -182,9 +182,9 @@ export function useSessionManager(): SessionManager {
   return {
     ime,
     paragraph,
-    romanParagraph,
+    englishParagraph,
     setParagraph,
-    setRomanParagraph,
+    setEnglishParagraph,
     currentTitle,
     renameCurrentSession: setCurrentTitle,
     currentSavedAt,

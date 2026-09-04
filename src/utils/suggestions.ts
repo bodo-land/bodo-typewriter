@@ -5,7 +5,7 @@ import { CONFUSABLE_FAMILIES } from '../data/confusables';
 export type SuggestionOption = {
   key: string;
   /** The full segment with this option applied — e.g. "fwr", not just "w". */
-  roman: string;
+  english: string;
   unicode: string;
   /** True for the option matching what the user actually typed for this segment. */
   isCurrent: boolean;
@@ -76,10 +76,10 @@ function isContextSensitiveBeforeVowel(key: string, nextToken: { kind: string } 
  * "ae"), and only falls back to the single token if that pair doesn't
  * belong to any family — letting the same family work in both directions.
  */
-export function getSuggestionSections(romanBuffer: string): SuggestionSection[] {
-  if (!romanBuffer) return [];
+export function getSuggestionSections(englishBuffer: string): SuggestionSection[] {
+  if (!englishBuffer) return [];
 
-  const segments = romanBuffer.split('_');
+  const segments = englishBuffer.split('_');
   const sections: SuggestionSection[] = [];
 
   segments.forEach((segment, segmentIndex) => {
@@ -105,18 +105,18 @@ export function getSuggestionSections(romanBuffer: string): SuggestionSection[] 
 
       const currentUnicode = transliterate(segment);
       seenOutputs.add(currentUnicode);
-      options.push({ key: raw, roman: segment, unicode: currentUnicode, isCurrent: true });
+      options.push({ key: raw, english: segment, unicode: currentUnicode, isCurrent: true });
 
       const nextToken = tokens[i + span];
 
       for (const altKey of family) {
         if (altKey === raw) continue;
         if (span === 1 && isContextSensitiveBeforeVowel(altKey, nextToken)) continue;
-        const roman = before + altKey + after;
-        const unicode = transliterate(roman);
+        const english = before + altKey + after;
+        const unicode = transliterate(english);
         if (seenOutputs.has(unicode)) continue;
         seenOutputs.add(unicode);
-        options.push({ key: altKey, roman, unicode, isCurrent: false });
+        options.push({ key: altKey, english, unicode, isCurrent: false });
       }
 
       // A group of one (just the current spelling, no real alternatives) isn't useful.
@@ -134,11 +134,11 @@ export function getSuggestionSections(romanBuffer: string): SuggestionSection[] 
 }
 
 /**
- * Rebuilds the full "_"-joined buffer with one segment's Roman text
+ * Rebuilds the full "_"-joined buffer with one segment's English text
  * replaced — used when the user clicks a suggestion chip.
  */
-export function applySuggestionToBuffer(romanBuffer: string, segmentIndex: number, newSegmentRoman: string): string {
-  const segments = romanBuffer.split('_');
-  segments[segmentIndex] = newSegmentRoman;
+export function applySuggestionToBuffer(englishBuffer: string, segmentIndex: number, newSegmentEnglish: string): string {
+  const segments = englishBuffer.split('_');
+  segments[segmentIndex] = newSegmentEnglish;
   return segments.join('_');
 }
