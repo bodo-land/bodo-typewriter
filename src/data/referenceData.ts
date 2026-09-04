@@ -7,7 +7,9 @@
  * transliterator.ts output), not a phonetic/IPA-style romanization — two
  * entries turned up real gaps that way, the same category of bug as
  * consonantKeys.ts's त/प finding:
- *   - ई is 'ee', not 'I' — capital 'I' is a consonant alias for य.
+ *   - ई is 'I' (short/long pair with इ, same pattern as उ/ऊ = u/U).
+ *     Capital 'I' used to alias य instead — mappings.ts now gives ई its
+ *     own vowel entry so 'I' means ई and य is reachable only via 'y'.
  *   - ऋ is 'Ri' (capital R), not 'ri' — lowercase tokenizes as र+इ (रि).
  *   - औ is 'wo' (or 'ou') — 'ow' tokenizes as two separate vowels (अओ).
  *   - ः (visarga) is capital 'H' — 'ah' just produces आह.
@@ -23,7 +25,7 @@ export const VOWEL_REF: ChartRow[] = [
   { output: 'अ',  diacritic: '—',  english: 'o',    ipa: '[o]' },
   { output: 'आ',  diacritic: 'ा',  english: 'a',    ipa: '[a]' },
   { output: 'इ',  diacritic: 'ि',  english: 'i',    ipa: '[i]' },
-  { output: 'ई',  diacritic: 'ी',  english: 'ee',   ipa: '[i]' },
+  { output: 'ई',  diacritic: 'ी',  english: 'I',    ipa: '[i]' },
   { output: 'उ',  diacritic: 'ु',  english: 'u',    ipa: '[u]' },
   { output: 'ऊ',  diacritic: 'ू',  english: 'U',    ipa: '[u]' },
   { output: 'ऋ',  diacritic: 'ृ',  english: 'Ri',   ipa: '[ri]' },

@@ -55,8 +55,11 @@ export const VOWEL_MAPPINGS: Record<string, VowelEntry> = {
   'a':   { standalone: U.AA,  matra: U.M_AA,  source: 'documented' }, // आ / ा
   'A':   { standalone: U.AA,  matra: U.M_AA,  source: 'documented' }, // आ / ा
   'i':   { standalone: U.I,   matra: U.M_I,   source: 'documented' }, // इ / ि
-  // NOTE: 'I' (capital I) is DOCUMENTED as mapping to य (consonant), not ई.
-  //       Use 'ee' for ई (inferred from Assamese chart).
+  // 'I' used to be documented as य (consonant) instead of ई — overridden
+  // per explicit request so short/long i/I pairs with इ/ई the same way
+  // u/U already pairs with उ/ऊ. य is now reachable only via 'y'. 'ee'
+  // still works too (kept as an alias, not removed).
+  'I':   { standalone: U.II,  matra: U.M_II,  source: 'inferred'   }, // ई / ी
   'u':   { standalone: U.U,   matra: U.M_U,   source: 'documented' }, // उ / ु
   'U':   { standalone: U.UU,  matra: U.M_UU,  source: 'inferred'   }, // ऊ / ू
   'e':   { standalone: U.E,   matra: U.M_E,   source: 'documented' }, // ए / े
@@ -119,8 +122,7 @@ export const CONSONANT_MAPPINGS: Record<string, ConsonantEntry> = {
   'b':   { char: U.BA,   source: 'documented' }, // ब
   'B':   { char: U.BHA,  source: 'inferred'   }, // भ
   'm':   { char: U.MA,   source: 'documented' }, // म
-  'y':   { char: U.YA,   source: 'documented' }, // य
-  'I':   { char: U.YA,   source: 'documented' }, // य — capital I = य (DOCUMENTED: "य = I/y")
+  'y':   { char: U.YA,   source: 'documented' }, // य — 'I' used to also work here (documented as "य = I/y") but now means ई instead, see VOWEL_MAPPINGS
   'r':   { char: U.RA,   source: 'documented' }, // र
   'l':   { char: U.LA,   source: 'documented' }, // ल
   'L':   { char: U.LLA,  source: 'inferred'   }, // ऴ

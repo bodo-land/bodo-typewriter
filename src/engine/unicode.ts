@@ -81,7 +81,7 @@ export const U = {
   MA:  'म', // म  — DOCUMENTED (key: m)
 
   // Semivowels / liquids / sibilants
-  YA:  'य', // य  — DOCUMENTED (key: I/y  — capital-I or lowercase-y)
+  YA:  'य', // य  — DOCUMENTED (key: y — capital 'I' used to also work but now means ई instead)
   RA:  'र', // र  — DOCUMENTED (key: r)
   LA:  'ल', // ल  — DOCUMENTED (key: l)
   LLA: 'ऴ', // ऴ  — INFERRED   (key: L) — U+0934 LLLA, not U+0933 LLA (ळ), despite the constant's name

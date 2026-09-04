@@ -67,6 +67,7 @@ describe('standalone vowels', () => {
   it('[D] A  → आ', () => expect(transliterate('A')).toBe('आ'));
   it('[D] i  → इ',  () => expect(transliterate('i')).toBe('इ'));
   it('[I] ee → ई', () => expect(transliterate('ee')).toBe('ई'));
+  it('[I] I  → ई (short/long pair with i, freed from य)', () => expect(transliterate('I')).toBe('ई'));
   it('[D] u  → उ',  () => expect(transliterate('u')).toBe('उ'));
   it('[I] oo → ऊ', () => expect(transliterate('oo')).toBe('ऊ'));
   it('[D] e  → ए',  () => expect(transliterate('e')).toBe('ए'));
@@ -103,8 +104,6 @@ describe('consonants — documented', () => {
   it('[D] b  → ब', () => expect(transliterate('b')).toBe('ब'));
   it('[D] m  → म', () => expect(transliterate('m')).toBe('म'));
   it('[D] y  → य', () => expect(transliterate('y')).toBe('य'));
-  it('[D] I  → य (capital I, documented alias for य)', () =>
-    expect(transliterate('I')).toBe('य'));
   it('[D] r  → र', () => expect(transliterate('r')).toBe('र'));
   it('[D] l  → ल', () => expect(transliterate('l')).toBe('ल'));
   it('[D] s  → स', () => expect(transliterate('s')).toBe('स'));
@@ -237,8 +236,8 @@ describe('edge cases', () => {
   it('double consonant (no vowel between) → halant conjunct', () =>
     expect(transliterate('kk')).toBe('क्क'));
 
-  it('I (cap) after consonant acts as ya-consonant', () => {
-    // k + I → क + halant + य (conjunct kya)
-    expect(transliterate('kI')).toBe('क्य');
+  it('I (cap) after consonant is the ई mātrā, not a ya-consonant', () => {
+    // k + I → क + ी (kī, matra form of ई) — 'I' is a vowel now, not य
+    expect(transliterate('kI')).toBe('की');
   });
 });
