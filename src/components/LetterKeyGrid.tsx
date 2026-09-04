@@ -62,7 +62,7 @@ export function LetterKeyGrid({
               <kbd style={{
                 fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
                 fontSize: 'var(--fs-13)',
-                color: key ? GH.fgMuted : GH.fgSubtle,
+                color: key ? GH.fgDefault : GH.fgSubtle,
               }}>
                 {key ?? '—'}
               </kbd>
