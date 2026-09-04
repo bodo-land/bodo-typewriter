@@ -6,14 +6,13 @@
  * simplest one a newcomer should reach for — for a compact always-on
  * cheat sheet (see ConsonantKeyRail.tsx).
  *
- * Verified directly against transliterator.ts output, not just read off
- * mappings.ts — two letters turned up a real gap that way: 'त' and 'प'
- * have no working key in this engine. Bodo phonology treats the plain
- * consonant keys 't' and 'p' as their *aspirated* counterparts (था/फा,
- * "Bodo's default t/p sound" per mappings.ts), and the unaspirated forms'
- * intended fallback — UNASPIRATED_BASES's 'to'/'po' — is dead code the
- * tokenizer never reads (confirmed: "to"+"a" transliterates as थ + आ,
- * two separate tokens, not त). So key: null for those two, honestly.
+ * Verified directly against transliterator.ts output rather than just
+ * read off mappings.ts — this is what caught 't'/'p' originally landing
+ * on थ/फ instead of त/प (mappings.ts used to alias them to their
+ * aspirated counterparts, following documented Pramukh IME behavior).
+ * That's since been overridden in mappings.ts itself so 't' → त and
+ * 'p' → प for real, matching every other unaspirated/aspirated pair
+ * in this chart — not just relabeled here.
  */
 
 export type ConsonantKey = {
@@ -41,14 +40,14 @@ export const CONSONANT_KEYS: ConsonantKey[] = [
   { devanagari: 'ढ', key: 'Dh' },
   { devanagari: 'ण', key: 'N' },
 
-  { devanagari: 'त', key: null },
-  { devanagari: 'थ', key: 't' },
+  { devanagari: 'त', key: 't' },
+  { devanagari: 'थ', key: 'th' },
   { devanagari: 'द', key: 'd' },
   { devanagari: 'ध', key: 'dh' },
   { devanagari: 'न', key: 'n' },
 
-  { devanagari: 'प', key: null },
-  { devanagari: 'फ', key: 'p' },
+  { devanagari: 'प', key: 'p' },
+  { devanagari: 'फ', key: 'ph' },
   { devanagari: 'ब', key: 'b' },
   { devanagari: 'भ', key: 'bh' },
   { devanagari: 'म', key: 'm' },

@@ -1,10 +1,9 @@
 import { LetterKeyGrid } from './LetterKeyGrid';
 import { CONSONANT_KEYS } from '../data/consonantKeys';
 
-// Classical varga row groupings: 5 stop-consonant rows, then the
-// semivowels (4), sibilants (3), and ह alone — matches how any
-// Sanskrit/Hindi/Bodo consonant chart is traditionally laid out.
-const GROUP_SIZES = [5, 5, 5, 5, 5, 4, 3, 1];
+// 5 stop-consonant rows, then the semivowels/sibilants/ह split evenly
+// across two rows of 4.
+const GROUP_SIZES = [5, 5, 5, 5, 5, 4, 4];
 
 /**
  * "Which key types this letter?" cheat sheet — one tab inside

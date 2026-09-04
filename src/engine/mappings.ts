@@ -103,10 +103,18 @@ export const CONSONANT_MAPPINGS: Record<string, ConsonantEntry> = {
   'T':   { char: U.TTA,  source: 'inferred'   }, // ट
   'D':   { char: U.DDA,  source: 'inferred'   }, // ड
   'N':   { char: U.NNA,  source: 'inferred'   }, // ण
-  't':   { char: U.THA,  source: 'documented' }, // थ — Bodo's default 't' sound
+  // 't'/'p' were originally mapped to their aspirated counterparts थ/फ
+  // (pramukhime.com documents this as "Bodo's default t/p sound"), which
+  // meant 'th'/'ph' and plain 't'/'p' all produced the same output and
+  // त/प had no key of their own. Overridden per explicit request so
+  // 't' → त and 'p' → प, matching the unaspirated/aspirated pairing
+  // used everywhere else in the table (kh/gh/ch/jh/etc.) — this is a
+  // deliberate departure from the documented Pramukh IME behavior, not
+  // an oversight.
+  't':   { char: U.TA,   source: 'inferred' }, // त
   'd':   { char: U.DA,   source: 'documented' }, // द
   'n':   { char: U.NA,   source: 'documented' }, // न
-  'p':   { char: U.PHA,  source: 'documented' }, // फ — Bodo's default 'p' sound
+  'p':   { char: U.PA,   source: 'inferred' }, // प
   'f':   { char: U.PHA,  source: 'documented' }, // फ
   'b':   { char: U.BA,   source: 'documented' }, // ब
   'B':   { char: U.BHA,  source: 'inferred'   }, // भ

@@ -92,12 +92,12 @@ describe('consonants — documented', () => {
   it('[D] g  → ग', () => expect(transliterate('g')).toBe('ग'));
   it('[D] NG → ङ', () => expect(transliterate('NG')).toBe('ङ'));
   it('[D] j  → ज', () => expect(transliterate('j')).toBe('ज'));
-  it('[D] t  → थ', () => expect(transliterate('t')).toBe('थ'));
+  it('[D] t  → त', () => expect(transliterate('t')).toBe('त'));
   it('[D] th → थ', () => expect(transliterate('th')).toBe('थ'));
   it('[D] d  → द', () => expect(transliterate('d')).toBe('द'));
   it('[D] dh → ध', () => expect(transliterate('dh')).toBe('ध'));
   it('[D] n  → न', () => expect(transliterate('n')).toBe('न'));
-  it('[D] p  → फ', () => expect(transliterate('p')).toBe('फ'));
+  it('[D] p  → प', () => expect(transliterate('p')).toBe('प'));
   it('[D] ph → फ', () => expect(transliterate('ph')).toBe('फ'));
   it('[D] f  → फ', () => expect(transliterate('f')).toBe('फ'));
   it('[D] b  → ब', () => expect(transliterate('b')).toBe('ब'));
@@ -146,8 +146,8 @@ describe('consonant + vowel (mātrā) combinations', () => {
 // ── Consonant clusters (halant) ───────────────────────────────────────────────
 
 describe('consonant clusters', () => {
-  it('[I] kt → क्थ (halant inserted between two consonants)', () =>
-    expect(transliterate('kt')).toBe('क्थ'));
+  it('[I] kt → क्त (halant inserted between two consonants)', () =>
+    expect(transliterate('kt')).toBe('क्त'));
 
   it('[I] sth → स्थ (s + th conjunct)', () =>
     expect(transliterate('sth')).toBe('स्थ'));
