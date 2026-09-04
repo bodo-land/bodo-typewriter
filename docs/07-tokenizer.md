@@ -143,7 +143,7 @@ handled correctly:
 |-----|----------------|-----------|
 | `H` | CONSONANT (ह), SPECIAL (ः) | Moved to SPECIAL → always emits ः |
 | `M` | VOWEL (anusvara) | No conflict |
-| `I` | CONSONANT (य), formerly VOWEL (ई) | Removed from VOWEL; 'I' → य always |
+| `I` | VOWEL (ई), formerly CONSONANT (य) | Removed from CONSONANT; 'I' → ई always (य is reachable only via 'y' now) |
 | `w` | VOWEL (`w`→ओ), prefix of `wo`/`wi` | Longest-match: `wo`, `wi` (len 2) beat `w` (len 1) |
 | `o` | VOWEL (`o`→अ), prefix of `ou`, `oo`, `oM` | Longest-match: multi-char entries beat `o` |
 

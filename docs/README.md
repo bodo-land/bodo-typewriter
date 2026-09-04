@@ -22,6 +22,7 @@ open-source reimplementation in TypeScript + React.
 | 11 | [Performance & Future Work](11-performance.md) | Trie, FST, WASM, dictionary suggestions |
 | 12 | [Typing Quick-Reference](12-quick-reference.md) | Full cheat-sheet for end users |
 | 13 | [Key & Unicode Reference](13-key-and-unicode-reference.md) | Every key → Unicode code point, generated straight from mappings.ts/unicode.ts, with known discrepancies flagged |
+| 14 | ["Did You Mean?" Suggestions](14-did-you-mean-suggestions.md) | Confusable key families, how suggestions are generated and applied, auto-open behavior, how to add a new pair |
 | — | [Fixes & Improvements](fixes_improvements/00-index.md) | Bug tracker, engine gaps, feature roadmap, UI issues, testing gaps |
 
 ---
