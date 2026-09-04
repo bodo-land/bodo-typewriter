@@ -99,7 +99,7 @@ rules (e.g., Noto Sans Devanagari), but important for cross-font compatibility.
 Bodo uses several borrowed sounds (from Sanskrit and Assamese) that require
 nukta (U+093C ़) — a dot below a consonant:
 
-| Roman key | Expected | Unicode |
+| English key | Expected | Unicode |
 |-----------|----------|---------|
 | `q` or `qa` | क़ | U+0915 + U+093C |
 | `fa` | फ़ | U+092B + U+093C |
@@ -159,12 +159,12 @@ if (token.kind === 'special' && token.raw === '.a') {
 
 ---
 
-## ENG-005 — Long Roman input causes layout jank in the composing hint · 🟢 Low
+## ENG-005 — Long English input causes layout jank in the composing hint · 🟢 Low
 
 ### Problem
 
-If the user types a very long Roman string without a word boundary (e.g., a
-long proper noun with no spaces), `romanBuffer` can grow to 30+ characters.
+If the user types a very long English string without a word boundary (e.g., a
+long proper noun with no spaces), `englishBuffer` can grow to 30+ characters.
 The composing hint (`Composing: <kbd>bwdwlandkhwn…</kbd>`) overflows its
 container and pushes the layout.
 
@@ -173,12 +173,12 @@ container and pushes the layout.
 Truncate the displayed buffer in the UI hint, not the actual buffer:
 
 ```typescript
-const displayBuffer = ime.romanBuffer.length > 20
-  ? '…' + ime.romanBuffer.slice(-20)
-  : ime.romanBuffer;
+const displayBuffer = ime.englishBuffer.length > 20
+  ? '…' + ime.englishBuffer.slice(-20)
+  : ime.englishBuffer;
 ```
 
-This is a UI change only; `romanBuffer` in the hook remains full-length.
+This is a UI change only; `englishBuffer` in the hook remains full-length.
 
 ---
 
@@ -221,7 +221,7 @@ grep -r 'transliterateSegment' src/
 
 ### Problem
 
-`transliterator.ts` exports `mapCursorPosition` for mapping a Roman cursor
+`transliterator.ts` exports `mapCursorPosition` for mapping an English cursor
 offset to a Unicode cursor offset.  This function exists to support BUG-003
 (cursor tracking in `useBodoIME`), but cursor tracking has not been
 implemented yet.

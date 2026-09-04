@@ -6,8 +6,8 @@ The existing engine is fast enough for interactive IME use:
 
 | Operation | Typical input | Time |
 |-----------|-------------|------|
-| `tokenize("bwdw")` | 4 Roman chars | ~2 µs |
-| `transliterate("bwdw")` | 4 Roman chars | ~5 µs |
+| `tokenize("bwdw")` | 4 English chars | ~2 µs |
+| `transliterate("bwdw")` | 4 English chars | ~5 µs |
 | `transliterate(1000 chars)` | Long paragraph | ~1 ms |
 
 For IME use, input is typically 1–20 characters (a single word being typed).
@@ -174,7 +174,7 @@ Engine shows suggestions:
 **Architecture:**
 
 ```
-transliterate(roman) → candidate Unicode prefix
+transliterate(english) → candidate Unicode prefix
         │
    PrefixLookup(prefix, dict)
         │
@@ -210,7 +210,7 @@ Current limitation: `keydown` events are unreliable on mobile soft keyboards.
 4. Feed the delta through the transliterator
 
 ```typescript
-// Hidden input captures raw Roman
+// Hidden input captures raw English
 <input
   ref={hiddenRef}
   style={{ position: 'absolute', opacity: 0, width: 1 }}

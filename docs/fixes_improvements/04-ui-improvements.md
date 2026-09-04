@@ -130,19 +130,19 @@ maxHeight to `parentHeight - fixedChildrenHeight`.
 In `App.tsx`, the composing hint slice calculation:
 
 ```typescript
-ime.value.slice(ime.value.length - ime.romanBuffer.length >= 0
-  ? ime.value.length - ime.romanBuffer.length : 0)
+ime.value.slice(ime.value.length - ime.englishBuffer.length >= 0
+  ? ime.value.length - ime.englishBuffer.length : 0)
 ```
 
-This is incorrect.  `romanBuffer.length` is the number of Roman characters,
+This is incorrect.  `englishBuffer.length` is the number of English characters,
 but `ime.value.length` is the number of Unicode code units.  Because
-Devanagari mātrā sequences expand one Roman char to 2+ Unicode chars, the
+Devanagari mātrā sequences expand one English char to 2+ Unicode chars, the
 slice start position is often wrong, showing too much or too little of the
 in-progress transliteration.
 
 ### Fix
 
-The in-progress transliteration is simply `transliterate(ime.romanBuffer)`.
+The in-progress transliteration is simply `transliterate(ime.englishBuffer)`.
 Use that directly:
 
 ```typescript
@@ -150,12 +150,12 @@ import { transliterate } from '../engine/transliterator';
 
 // In the composing hint:
 <span style={{ ... }}>
-  {transliterate(ime.romanBuffer)}
+  {transliterate(ime.englishBuffer)}
 </span>
 ```
 
-This is always accurate because `ime.value = committedUnicode + transliterate(romanBuffer)`,
-so the live preview is exactly `transliterate(romanBuffer)`.
+This is always accurate because `ime.value = committedUnicode + transliterate(englishBuffer)`,
+so the live preview is exactly `transliterate(englishBuffer)`.
 
 ---
 

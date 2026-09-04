@@ -9,7 +9,7 @@ For Indian languages, four main IME types exist:
 
 | Type | How it works | Example |
 |------|-------------|---------|
-| **Phonetic transliteration** | Roman keystrokes map to phonetically equivalent script characters | Pramukh IME, Google Input |
+| **Phonetic transliteration** | English keystrokes map to phonetically equivalent script characters | Pramukh IME, Google Input |
 | **InScript / keyboard remapping** | Each physical key maps to a fixed script key (standardised by Government of India) | InScript Devanagari |
 | **Handwriting recognition** | User draws characters; ML model recognises them | Google Handwriting |
 | **Dictionary-assisted** | Phonetic input + word frequency model disambiguates homophones | Google Transliterate, Microsoft IME |
@@ -25,13 +25,13 @@ User keystroke(s)
         │
         ▼
 ┌───────────────────┐
-│   Input Buffer    │  Accumulates raw Roman keystrokes for the current
-│  (Roman string)   │  word/composition unit.
+│   Input Buffer    │  Accumulates raw English keystrokes for the current
+│  (English string)   │  word/composition unit.
 └────────┬──────────┘
          │
          ▼
 ┌───────────────────┐
-│    Tokenizer      │  Longest-match scan: breaks Roman string into typed
+│    Tokenizer      │  Longest-match scan: breaks English string into typed
 │  (longest-match)  │  tokens: vowel | consonant | special | passthrough
 └────────┬──────────┘
          │
@@ -53,7 +53,7 @@ User keystroke(s)
 
 ### Problem 1 — Tokenisation Ambiguity
 
-Roman key sequences are ambiguous without a defined parsing strategy.
+English key sequences are ambiguous without a defined parsing strategy.
 Consider:
 
 ```
@@ -104,21 +104,21 @@ another consonant token, prepends halant before writing the new consonant.
 A well-designed IME separates text into two regions:
 
 ```
-[committed Unicode text] | [composition (in-progress Roman buffer)]
+[committed Unicode text] | [composition (in-progress English buffer)]
      "नमस्"               |          "kar"
 ```
 
 - **Committed text** is final and cannot be altered by the IME (only by
   native editing commands like Backspace in the committed region).
-- **Composition buffer** is the current Roman input being built into
+- **Composition buffer** is the current English input being built into
   the next Devanagari akṣara or word.
 
 When the user presses **Space**, **Enter**, or reaches a word boundary,
-the composition is *committed*: the Roman buffer is transliterated to
+the composition is *committed*: the English buffer is transliterated to
 Unicode and appended to the committed region.
 
 **Smart backspace** operates on the composition buffer first — each
-Backspace removes one Roman character and re-transliterates.  Only when
+Backspace removes one English character and re-transliterates.  Only when
 the buffer is empty does Backspace delete from the committed region.
 
 ## 2.5 Devanagari Aksara Model

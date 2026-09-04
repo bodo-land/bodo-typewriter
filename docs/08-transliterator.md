@@ -223,12 +223,12 @@ Result: स्थ्रा
 ## 8.8 cursor mapping — mapCursorPosition()
 
 ```typescript
-export function mapCursorPosition(roman: string, romanCursor: number): number {
-  return transliterate(roman.slice(0, romanCursor)).length;
+export function mapCursorPosition(english: string, englishCursor: number): number {
+  return transliterate(english.slice(0, englishCursor)).length;
 }
 ```
 
-This transliterates the prefix up to the Roman cursor and measures the
+This transliterates the prefix up to the English cursor and measures the
 Unicode output length.  It is correct but O(n²) — re-transliterating for
 every cursor position.  For typical IME input (short words), this is fine.
 

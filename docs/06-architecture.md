@@ -12,7 +12,7 @@ src/
 │   └── transliterator.ts     Main transliterate() function + cursor mapping
 │
 ├── hooks/
-│   └── useBodoIME.ts         React hook — manages committed + Roman buffer state
+│   └── useBodoIME.ts         React hook — manages committed + English buffer state
 │
 ├── components/
 │   └── BodoInput.tsx         <textarea> with IME, toggle, paste support
@@ -76,7 +76,7 @@ anywhere else.
 
 ### engine/tokenizer.ts
 
-**Purpose:** Break a Roman input string into typed tokens using longest-match.
+**Purpose:** Break an English input string into typed tokens using longest-match.
 
 **What it exports:**
 ```typescript
@@ -120,13 +120,13 @@ vowel modifier `ng`.  Merging by length prevents this.
 
 ### engine/transliterator.ts
 
-**Purpose:** The main state machine that converts a Roman string to Devanagari.
+**Purpose:** The main state machine that converts an English string to Devanagari.
 
 **What it exports:**
 ```typescript
 function transliterate(input: string): string;
 function transliterateSegment(segment: string): string;
-function mapCursorPosition(roman: string, romanCursor: number): number;
+function mapCursorPosition(english: string, englishCursor: number): number;
 ```
 
 **State machine:**
@@ -144,7 +144,7 @@ INITIAL ──────────► AFTER_CONSONANT
 ```
 
 **`mapCursorPosition`:** Transliterates prefixes of increasing length and
-returns the output length at the Roman cursor position.  Used to preserve
+returns the output length at the English cursor position.  Used to preserve
 cursor placement after transliteration.
 
 ---
@@ -156,18 +156,18 @@ cursor placement after transliteration.
 **State:**
 ```typescript
 const [committedUnicode, setCommitted] = useState('');
-const [romanBuffer, setRomanBuffer]    = useState('');
+const [englishBuffer, setEnglishBuffer]    = useState('');
 ```
 
-**Visible value:** `committedUnicode + transliterate(romanBuffer)`
+**Visible value:** `committedUnicode + transliterate(englishBuffer)`
 
 **Key logic:**
 
 | Event | Action |
 |-------|--------|
-| Printable key | Append to `romanBuffer`, re-transliterate |
-| Space/Enter/Tab | Commit: `committed += transliterate(roman) + boundaryChar`, `roman = ''` |
-| Backspace (buffer non-empty) | `roman = roman.slice(0, -1)` |
+| Printable key | Append to `englishBuffer`, re-transliterate |
+| Space/Enter/Tab | Commit: `committed += transliterate(english) + boundaryChar`, `english = ''` |
+| Backspace (buffer non-empty) | `english = english.slice(0, -1)` |
 | Backspace (buffer empty) | `committed = committed.slice(0, -1)` |
 | F9 | Toggle IME active/inactive |
 
@@ -192,7 +192,7 @@ type BodoInputProps = {
 ```
 
 **Features beyond the hook:**
-- F9 toggle button and status bar showing Roman buffer
+- F9 toggle button and status bar showing English buffer
 - Paste handler: intercepts clipboard text and runs `transliterate()` on it
 - Noto Sans Devanagari font stack
 - `Clear` button
@@ -221,14 +221,14 @@ User keyboard event
         ▼
   useBodoIME.handleKeyDown
         │
-        ├─ Backspace? → trim romanBuffer
-        ├─ Space/Enter? → commit: transliterate(roman) → committedUnicode
-        └─ Printable? → append to romanBuffer
+        ├─ Backspace? → trim englishBuffer
+        ├─ Space/Enter? → commit: transliterate(english) → committedUnicode
+        └─ Printable? → append to englishBuffer
                               │
                               ▼
-                    transliterate(romanBuffer)
+                    transliterate(englishBuffer)
                               │
-                     tokenize(roman)  ←── mappings.ts ALL_ENTRIES (sorted)
+                     tokenize(english)  ←── mappings.ts ALL_ENTRIES (sorted)
                               │
                      Token stream [ {raw,kind}, ... ]
                               │

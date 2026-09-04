@@ -2,7 +2,7 @@
 
 ## 7.1 What the Tokenizer Does
 
-The tokenizer converts a raw Roman-script input string into a sequence of
+The tokenizer converts a raw English-script input string into a sequence of
 **typed tokens**.  Each token has:
 
 - `raw` — the matched key sequence (e.g. `"kh"`, `"ng"`, `"a"`)

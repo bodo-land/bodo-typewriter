@@ -72,36 +72,36 @@ setCommitted(c => dropLastGrapheme(c));
 
 ---
 
-## BUG-002 — Paste into Roman input silently loses IME state 🔴 Open
+## BUG-002 — Paste into English input silently loses IME state 🔴 Open
 
 ### Reproduction
 
-1. With IME on, type `bwdw` into the Roman textarea (romanBuffer = `"bwdw"`).
+1. With IME on, type `bwdw` into the English textarea (englishBuffer = `"bwdw"`).
 2. Select all, then paste `namw` from the clipboard.
 
 ### Expected behaviour
 
-The pasted Roman text `namw` replaces the buffer and is immediately
+The pasted English text `namw` replaces the buffer and is immediately
 transliterated to `नामो`.
 
 ### Actual behaviour
 
 Because the textarea is in a controlled React mode when IME is off (and
 uncontrolled when IME is on), the `onChange` handler is never called for
-the paste.  The visible textarea shows the pasted text, but `romanBuffer`
+the paste.  The visible textarea shows the pasted text, but `englishBuffer`
 in the hook still holds the old value.  On the next keypress the buffer
 de-syncs and produces garbled output.
 
 ### Root cause
 
-`App.tsx` passes `value={imeActive ? ime.romanBuffer : ime.value}` to the
+`App.tsx` passes `value={imeActive ? ime.englishBuffer : ime.value}` to the
 textarea.  In IME-on mode the textarea's `onChange` is not wired, so clipboard
 paste events bypass the state machine entirely.
 
 ### Fix
 
-Add an `onPaste` handler that reads the pasted text, strips any non-Roman
-characters, and commits it through `ime.setRoman`:
+Add an `onPaste` handler that reads the pasted text, strips any non-English
+characters, and commits it through `ime.setEnglish`:
 
 ```typescript
 const handlePaste = useCallback(
@@ -110,9 +110,9 @@ const handlePaste = useCallback(
     e.preventDefault();
     const pasted = e.clipboardData.getData('text/plain');
     // Commit whatever is already in the buffer
-    ime.setRoman('');
-    // Feed pasted text as new roman buffer
-    ime.setRoman(pasted);
+    ime.setEnglish('');
+    // Feed pasted text as new english buffer
+    ime.setEnglish(pasted);
   },
   [ime, imeActive],
 );
@@ -131,8 +131,8 @@ const handlePaste = useCallback(
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
     // Commit current buffer + full transliteration of pasted text
-    setCommitted(c => c + transliterate(ime.romanBuffer) + transliterate(text));
-    setRomanBuffer('');
+    setCommitted(c => c + transliterate(ime.englishBuffer) + transliterate(text));
+    setEnglishBuffer('');
   },
   [ime, imeActive],
 );
@@ -158,14 +158,14 @@ The character is inserted at the cursor position.
 ### Actual behaviour
 
 The IME ignores cursor position entirely.  All new keystrokes are appended
-to the end of `romanBuffer` regardless of where the cursor sits.  The
+to the end of `englishBuffer` regardless of where the cursor sits.  The
 `mapCursorPosition` helper in `transliterator.ts` exists precisely to support
 this, but it is not wired to the textarea.
 
 ### Root cause
 
 `useBodoIME.ts` has no concept of a cursor offset.  `handleKeyDown` always
-appends to the tail of `romanBuffer`.
+appends to the tail of `englishBuffer`.
 
 ### Fix
 
@@ -174,27 +174,27 @@ This requires a significant extension to the hook's state model:
 ```typescript
 type IMEState = {
   value: string;
-  romanBuffer: string;
-  cursorRoman: number;     // cursor position within romanBuffer
+  englishBuffer: string;
+  cursorEnglish: number;     // cursor position within englishBuffer
   handleKeyDown: ...;
   handleSelect: (start: number, end: number) => void;  // new
 };
 ```
 
 On `onSelect` (textarea selection-change event):
-1. Map the textarea's Unicode cursor position back to a Roman offset using
+1. Map the textarea's Unicode cursor position back to an English offset using
    the inverse of `mapCursorPosition`.
-2. Store `cursorRoman`.
+2. Store `cursorEnglish`.
 
 On keypress:
-1. Insert the new character at `romanBuffer[cursorRoman]` rather than at
+1. Insert the new character at `englishBuffer[cursorEnglish]` rather than at
    the end.
 2. Re-transliterate the full buffer.
-3. Advance `cursorRoman` by the key length.
+3. Advance `cursorEnglish` by the key length.
 
-This is non-trivial because one Roman character may expand to multiple
+This is non-trivial because one English character may expand to multiple
 Unicode codepoints (e.g. `ng` + vowel → anusvara + ग + mātrā = 3 chars).
-The Roman-to-Unicode cursor mapping must account for variable-length output.
+The English-to-Unicode cursor mapping must account for variable-length output.
 
 **Estimated effort:** High (2–3 days).  Needs new tests for cursor invariants.
 
@@ -229,7 +229,7 @@ buffer empty":
 ```typescript
 if (key === 'Delete') {
   e.preventDefault();
-  if (romanBuffer.length === 0) {
+  if (englishBuffer.length === 0) {
     // Nothing after cursor in this model — nothing to delete.
     // Once cursor tracking lands, this becomes: delete char after cursor.
   }
@@ -293,7 +293,7 @@ All stored Unicode is NFC regardless of source.
 `committedUnicode` is set by direct string concatenation in `useBodoIME`:
 
 ```typescript
-setCommitted(c => c + transliterate(romanBuffer) + commitChar);
+setCommitted(c => c + transliterate(englishBuffer) + commitChar);
 ```
 
 `commitChar` (space, newline) is always NFC-safe.  However if `committedUnicode`

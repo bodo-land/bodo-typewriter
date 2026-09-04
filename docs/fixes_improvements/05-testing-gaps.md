@@ -34,11 +34,11 @@ describe('useBodoIME', () => {
              metaKey: false, altKey: false, ...opts } as React.KeyboardEvent<HTMLElement>;
   }
 
-  it('builds romanBuffer from keypresses', () => {
+  it('builds englishBuffer from keypresses', () => {
     const { result } = renderHook(() => useBodoIME());
     act(() => result.current.handleKeyDown(key('b')));
     act(() => result.current.handleKeyDown(key('w')));
-    expect(result.current.romanBuffer).toBe('bw');
+    expect(result.current.englishBuffer).toBe('bw');
     expect(result.current.value).toBe('बो');
   });
 
@@ -47,17 +47,17 @@ describe('useBodoIME', () => {
     act(() => result.current.handleKeyDown(key('b')));
     act(() => result.current.handleKeyDown(key('w')));
     act(() => result.current.handleKeyDown(key(' ')));
-    expect(result.current.romanBuffer).toBe('');
+    expect(result.current.englishBuffer).toBe('');
     expect(result.current.value).toBe('बो ');
   });
 
-  it('backspace removes last roman char from buffer', () => {
+  it('backspace removes last english char from buffer', () => {
     const { result } = renderHook(() => useBodoIME());
     act(() => result.current.handleKeyDown(key('k')));
     act(() => result.current.handleKeyDown(key('h')));
     expect(result.current.value).toBe('ख');
     act(() => result.current.handleKeyDown(key('Backspace')));
-    expect(result.current.romanBuffer).toBe('k');
+    expect(result.current.englishBuffer).toBe('k');
     expect(result.current.value).toBe('ख');
   });
 
@@ -77,7 +77,7 @@ describe('useBodoIME', () => {
     act(() => result.current.handleKeyDown(key('w')));
     act(() => result.current.reset());
     expect(result.current.value).toBe('');
-    expect(result.current.romanBuffer).toBe('');
+    expect(result.current.englishBuffer).toBe('');
   });
 
   it('ctrl+Z is passed through to browser', () => {
@@ -128,7 +128,7 @@ describe('ng / M rule edge cases', () => {
   it('oM emits अं not अ + anusvara separately', () => {
     // oM is a single 3-char token; o+M would be two tokens
     expect(transliterate('oM')).toBe('अं');
-    // Verify o+M route also works (romanBuffer split across commits is impossible
+    // Verify o+M route also works (englishBuffer split across commits is impossible
     // but the engine should handle o then M correctly)
   });
 
@@ -185,22 +185,22 @@ describe('mapCursorPosition', () => {
     expect(mapCursorPosition('bwdw', 0)).toBe(0);
   });
 
-  it('cursor after first roman char maps correctly', () => {
+  it('cursor after first english char maps correctly', () => {
     // 'b' → ब (1 codepoint)
     expect(mapCursorPosition('bwdw', 1)).toBe(1);
   });
 
   it('cursor after 2-char token maps to end of multi-codepoint output', () => {
-    // 'kh' → ख (1 codepoint) — cursor at 2 roman = 1 unicode
+    // 'kh' → ख (1 codepoint) — cursor at 2 english = 1 unicode
     expect(mapCursorPosition('kha', 2)).toBe(1);
-    // 'kha' → खा (2 codepoints) — cursor at 3 roman = 2 unicode
+    // 'kha' → खा (2 codepoints) — cursor at 3 english = 2 unicode
     expect(mapCursorPosition('kha', 3)).toBe(2);
   });
 
   it('cursor at end maps to full output length', () => {
-    const roman = 'bwdw';
-    const unicode = transliterate(roman);
-    expect(mapCursorPosition(roman, roman.length)).toBe(unicode.length);
+    const english = 'bwdw';
+    const unicode = transliterate(english);
+    expect(mapCursorPosition(english, english.length)).toBe(unicode.length);
   });
 });
 ```
@@ -256,7 +256,7 @@ Note: `ALL_ENTRIES` is currently not exported.  Add `export` to the
 ### Gap
 
 All current tests are example-based.  A property-based test would generate
-random Roman strings and assert structural invariants, finding edge cases that
+random English strings and assert structural invariants, finding edge cases that
 example tests miss.
 
 ### Invariants to test

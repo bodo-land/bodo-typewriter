@@ -246,7 +246,7 @@ surprises in longer sequences.
 **Source:** Documented — "Press F9 to switch between languages."
 
 The `BodoInput` component intercepts the F9 key to toggle the IME on/off:
-- **IME ON:** All keystroke handling is intercepted; Roman input is transliterated.
+- **IME ON:** All keystroke handling is intercepted; English input is transliterated.
 - **IME OFF:** The textarea behaves as a standard English textarea.
 
 This mirrors the Pramukh IME desktop behaviour exactly.

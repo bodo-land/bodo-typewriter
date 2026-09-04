@@ -22,13 +22,13 @@ touching React components.
 
 ```typescript
 const [committedUnicode, setCommitted] = useState(initialValue);
-const [romanBuffer, setRomanBuffer]    = useState('');
+const [englishBuffer, setEnglishBuffer]    = useState('');
 ```
 
 The **visible value** is a computed concatenation:
 
 ```
-value = committedUnicode + transliterate(romanBuffer)
+value = committedUnicode + transliterate(englishBuffer)
 ```
 
 This is re-computed on every render — `transliterate()` is fast enough
@@ -38,40 +38,40 @@ This is re-computed on every render — `transliterate()` is fast enough
 
 ```
                    ┌─ user types 'b'
-romanBuffer='b'    │    value = '' + transliterate('b') = 'ब'
+englishBuffer='b'    │    value = '' + transliterate('b') = 'ब'
                    │
                    ├─ user types 'w'
-romanBuffer='bw'   │    value = '' + transliterate('bw') = 'बो'
+englishBuffer='bw'   │    value = '' + transliterate('bw') = 'बो'
                    │
                    ├─ user types 'd'
-romanBuffer='bwd'  │    value = '' + transliterate('bwd') = 'बोद'
+englishBuffer='bwd'  │    value = '' + transliterate('bwd') = 'बोद'
                    │
                    ├─ user types 'w'
-romanBuffer='bwdw' │    value = '' + transliterate('bwdw') = 'बोदो'
+englishBuffer='bwdw' │    value = '' + transliterate('bwdw') = 'बोदो'
                    │
                    ├─ user presses SPACE
 committedUnicode   │    = 'बोदो '
-romanBuffer=''     │    value = 'बोदो ' + '' = 'बोदो '
+englishBuffer=''     │    value = 'बोदो ' + '' = 'बोदो '
 ```
 
 ### Backspace Behaviour
 
-Smart backspace operates on the Roman buffer first:
+Smart backspace operates on the English buffer first:
 
 ```
-romanBuffer='bwdw'  → Backspace → romanBuffer='bwd'
+englishBuffer='bwdw'  → Backspace → englishBuffer='bwd'
                                    transliterate('bwd') = 'बोद'
                                    value = '' + 'बोद' = 'बोद'
 ```
 
-This is correct IME behaviour: backing up through Roman keystrokes
+This is correct IME behaviour: backing up through English keystrokes
 rather than Unicode characters.  Without this, deleting `'बो'` (2 code units)
-would require 2 Backspaces even though only one Roman keystroke (`'w'`) caused it.
+would require 2 Backspaces even though only one English keystroke (`'w'`) caused it.
 
 When the buffer is empty:
 
 ```
-romanBuffer=''  → Backspace → committedUnicode = committedUnicode.slice(0, -1)
+englishBuffer=''  → Backspace → committedUnicode = committedUnicode.slice(0, -1)
 ```
 
 This removes the last UTF-16 code unit from committed text.  For multi-unit
@@ -86,8 +86,8 @@ Space, Enter, and Tab all trigger a commit:
 ```typescript
 if (COMMIT_CHARS.has(key)) {
   const commitChar = key === 'Enter' ? '\n' : key === 'Tab' ? '\t' : key;
-  setCommitted(c => c + transliterate(romanBuffer) + commitChar);
-  setRomanBuffer('');
+  setCommitted(c => c + transliterate(englishBuffer) + commitChar);
+  setEnglishBuffer('');
 }
 ```
 
@@ -128,7 +128,7 @@ const [text, setText] = useState('');
 ```
 
 In controlled mode the parent provides the value.  The hook's internal
-committed state is kept for Roman-buffer composition, but the displayed
+committed state is kept for English-buffer composition, but the displayed
 value is the prop.  Full two-way controlled mode (where the parent can
 externally modify text mid-composition) requires additional engineering
 not currently implemented.
@@ -140,8 +140,8 @@ When the user pastes text, `onPaste` intercepts and transliterates:
 ```typescript
 const onPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
   e.preventDefault();
-  const pastedRoman = e.clipboardData.getData('text/plain');
-  const unicode = transliterate(pastedRoman);
+  const pastedEnglish = e.clipboardData.getData('text/plain');
+  const unicode = transliterate(pastedEnglish);
   // insert `unicode` at current cursor position via native setter
 };
 ```
@@ -158,7 +158,7 @@ Below the textarea, a status bar shows:
 ✦ Bodo IME active (F9 to toggle) — composing: bwd_
 ```
 
-The `composing: bwd_` part shows the current Roman buffer — useful for
+The `composing: bwd_` part shows the current English buffer — useful for
 debugging and for users learning the key mappings.
 
 ---
@@ -185,8 +185,8 @@ The `>= end - 3` guard prevents the cursor from jumping if the user has
 manually moved it back into committed text.
 
 A production-quality cursor mapper would:
-1. Record the Roman cursor position before each update.
-2. Call `mapCursorPosition(roman, romanCursor)` to get the Unicode position.
+1. Record the English cursor position before each update.
+2. Call `mapCursorPosition(english, englishCursor)` to get the Unicode position.
 3. Set `setSelectionRange(uniPos, uniPos)`.
 
 ---
@@ -203,7 +203,7 @@ For production mobile support, use `onCompositionEnd` + `onChange`:
 ```typescript
 const onCompositionEnd = (e: React.CompositionEvent<HTMLTextAreaElement>) => {
   const data = e.data; // the composed string from the soft keyboard
-  setRomanBuffer(prev => prev + data);
+  setEnglishBuffer(prev => prev + data);
 };
 ```
 
@@ -246,7 +246,7 @@ function Editor() {
 import { useBodoIME } from './hooks/useBodoIME';
 
 function CustomEditor() {
-  const { value, romanBuffer, handleKeyDown } = useBodoIME();
+  const { value, englishBuffer, handleKeyDown } = useBodoIME();
   return (
     <div>
       <input
@@ -254,7 +254,7 @@ function CustomEditor() {
         onChange={() => {}}
         onKeyDown={handleKeyDown}
       />
-      <small>Buffer: {romanBuffer}</small>
+      <small>Buffer: {englishBuffer}</small>
     </div>
   );
 }

@@ -139,17 +139,17 @@ Example hook test:
 import { renderHook, act } from '@testing-library/react';
 import { useBodoIME } from '../hooks/useBodoIME';
 
-it('handles backspace into roman buffer', () => {
+it('handles backspace into english buffer', () => {
   const { result } = renderHook(() => useBodoIME());
 
   act(() => {
     // simulate typing 'bw'
-    result.current.setRoman('bw');
+    result.current.setEnglish('bw');
   });
   expect(result.current.value).toBe('बो');
 
   act(() => {
-    result.current.setRoman('b');
+    result.current.setEnglish('b');
   });
   expect(result.current.value).toBe('ब');
 });

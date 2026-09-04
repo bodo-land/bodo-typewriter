@@ -17,7 +17,7 @@ Effort: **S** (< 1 day) · **M** (2–3 days) · **L** (1–2 weeks) · **XL** (
 ### Architecture
 
 ```
-romanBuffer: "bwdw"
+englishBuffer: "bwdw"
     │
     ▼ transliterate()
 candidate prefix: "बोदो"
@@ -63,7 +63,7 @@ A prefix-compressed JSON trie (~2–5 MB uncompressed, ~600 KB gzipped):
 
 ### UI integration
 
-Add a `<SuggestionBar>` component between the Roman textarea and the
+Add a `<SuggestionBar>` component between the English textarea and the
 Devanagari output:
 
 ```tsx
@@ -79,7 +79,7 @@ Devanagari output:
 ```
 
 `commitSuggestion(word)` appends `word` to `committedUnicode` and clears
-`romanBuffer`.
+`englishBuffer`.
 
 ### Loading strategy
 
@@ -105,23 +105,23 @@ function getDict(): Promise<WordTrie> {
 
 ### Current limitation
 
-`useBodoIME` has no history.  Backspace undoes one Roman keystroke at a time
-within the current `romanBuffer`, but once a word is committed there is no
+`useBodoIME` has no history.  Backspace undoes one English keystroke at a time
+within the current `englishBuffer`, but once a word is committed there is no
 way to undo the commit.
 
 ### Design
 
-Maintain a bounded history stack of `(committedUnicode, romanBuffer)` snapshots:
+Maintain a bounded history stack of `(committedUnicode, englishBuffer)` snapshots:
 
 ```typescript
-type Snapshot = { committed: string; roman: string };
+type Snapshot = { committed: string; english: string };
 const [history, setHistory] = useState<Snapshot[]>([]);
 const [future,  setFuture]  = useState<Snapshot[]>([]);
 ```
 
 On every commit (space, enter):
 ```typescript
-setHistory(h => [...h.slice(-49), { committed: committedUnicode, roman: romanBuffer }]);
+setHistory(h => [...h.slice(-49), { committed: committedUnicode, english: englishBuffer }]);
 setFuture([]);
 ```
 
@@ -129,10 +129,10 @@ On `Ctrl+Z`:
 ```typescript
 if (history.length > 0) {
   const prev = history[history.length - 1];
-  setFuture(f => [{ committed: committedUnicode, roman: romanBuffer }, ...f]);
+  setFuture(f => [{ committed: committedUnicode, english: englishBuffer }, ...f]);
   setHistory(h => h.slice(0, -1));
   setCommitted(prev.committed);
-  setRomanBuffer(prev.roman);
+  setEnglishBuffer(prev.english);
 }
 ```
 
@@ -140,10 +140,10 @@ On `Ctrl+Y` / `Ctrl+Shift+Z` (redo):
 ```typescript
 if (future.length > 0) {
   const next = future[0];
-  setHistory(h => [...h, { committed: committedUnicode, roman: romanBuffer }]);
+  setHistory(h => [...h, { committed: committedUnicode, english: englishBuffer }]);
   setFuture(f => f.slice(1));
   setCommitted(next.committed);
-  setRomanBuffer(next.roman);
+  setEnglishBuffer(next.english);
 }
 ```
 
@@ -230,7 +230,7 @@ The current hook misses keystrokes on mobile.
 
 ### Solution architecture
 
-Use a **hidden input** to capture raw Roman keystrokes on mobile, and the
+Use a **hidden input** to capture raw English keystrokes on mobile, and the
 `InputEvent.inputType` field to detect insertions vs deletions:
 
 ```typescript
@@ -335,7 +335,7 @@ const [theme, setTheme] = useState<'dark'|'light'>(
 
 ### User story
 
-> As a new user who does not know the Roman key mappings, I want a clickable
+> As a new user who does not know the English key mappings, I want a clickable
 > on-screen keyboard that shows Bodo Devanagari on each key.
 
 ### Layout
@@ -349,7 +349,7 @@ Row 2: a→आ  s→स  d→द  f→फ  g→ग  h→ह  j→ज  k→ख  l
 Row 3: z  x→ष  c→च  v→व  b→ब  n→न  m→म
 ```
 
-Each key shows its Roman letter (small) and Devanagari output (large).
+Each key shows its English letter (small) and Devanagari output (large).
 Clicking a key fires the same path as `handleKeyDown` with that key.
 
 ### Shift / Caps handling
