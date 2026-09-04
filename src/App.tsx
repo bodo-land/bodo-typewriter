@@ -138,19 +138,32 @@ export default function App() {
     session.ime.ref.current?.focus();
   }, [session.ime]);
   const hasSuggestions = imeActive && suggestionSections.length > 0;
+  // "_"-delimited segment count — used below to tell "still the same word
+  // the user already saw/dismissed" apart from "moved on to a new word".
+  const segmentCount = session.ime.englishBuffer.split('_').length;
 
-  // Jump straight to "Did You Mean" the moment suggestions appear — but
-  // only on that rising edge (dependency is the boolean, not the array),
-  // so it doesn't keep stealing the tab back if the user switches away
-  // while suggestions are still showing on later keystrokes.
+  // Jump straight to "Did You Mean" the moment suggestions appear for a
+  // word the user hasn't already seen one for. Re-triggers either on the
+  // empty→non-empty rising edge, or whenever a new "_"-delimited segment
+  // starts (segmentCount changes) — that second case matters because
+  // suggestions can stay continuously true across a "_" boundary (e.g.
+  // "thang_nai" — segment 1 already has one), so the plain rising edge
+  // alone would only fire once per whole buffer. Without the segment
+  // check, manually closing the panel on one word would leave it closed
+  // for every later word too, as long as *something* stayed suggestible.
+  // Refining the *same* word further after a manual close intentionally
+  // does not reopen it — only starting a new one does.
   const hadSuggestions = useRef(false);
+  const prevSegmentCount = useRef(segmentCount);
   useEffect(() => {
-    if (hasSuggestions && !hadSuggestions.current) {
+    const newSegment = segmentCount !== prevSegmentCount.current;
+    if (hasSuggestions && (!hadSuggestions.current || newSegment)) {
       setReferenceOpen(true);
       setReferenceTab('suggestions');
     }
     hadSuggestions.current = hasSuggestions;
-  }, [hasSuggestions]);
+    prevSegmentCount.current = segmentCount;
+  }, [hasSuggestions, segmentCount]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
