@@ -4,28 +4,32 @@
 html, body { margin: 0; height: 100%; }
 
 /* ─── Theme tokens ──────────────────────────────────────────────────────── */
-/* Dark is the default (matches the app's original look); [data-theme="light"]
-   overrides it. Both are GitHub Primer palette values. */
+/* Dark is the default; [data-theme="light"] overrides it. Slate + indigo
+   palette. The --gh-* names are kept so inline-styled components built from
+   styles/theme.ts's GH keep working; the Tailwind colours below
+   (bg-canvas, text-muted, border-line, …) resolve to the same variables, so
+   one data-theme flip re-themes both. */
 :root {
-  --gh-canvas-default:  #0d1117;
-  --gh-canvas-subtle:   #161b22;
-  --gh-canvas-inset:    #010409;
-  --gh-border-default:  #30363d;
-  --gh-border-muted:    #21262d;
-  --gh-fg-default:      #e6edf3;
-  --gh-fg-muted:        #7d8590;
-  --gh-fg-subtle:       #6e7681;
-  --gh-accent-fg:       #2f81f7;
-  --gh-accent-emphasis: #1f6feb;
-  --gh-accent-subtle:   #121d2f;
-  --gh-success-fg:      #3fb950;
-  --gh-success-subtle:  #0f2d1a;
-  --gh-attention-fg:    #d29922;
-  --gh-danger-fg:       #f85149;
-  --gh-danger-subtle:   #2d0f0e;
-  --gh-hover-bg:        #21262d;
-  --gh-hover-border:    #8b949e;
-  --gh-row-stripe:      #0d111766;
+  --gh-canvas-default:  #0b0f17;
+  --gh-canvas-subtle:   #111827;
+  --gh-canvas-inset:    #020617;
+  --gh-border-default:  #1e293b;
+  --gh-border-muted:    #1e293b;
+  --gh-fg-default:      #f1f5f9;
+  --gh-fg-muted:        #94a3b8;
+  --gh-fg-subtle:       #64748b;
+  --gh-accent-fg:       #818cf8;
+  --gh-accent-emphasis: #4f46e5;
+  --gh-accent-subtle:   #1e1b4b;
+  --gh-success-fg:      #34d399;
+  --gh-success-subtle:  #064e3b;
+  --gh-attention-fg:    #fbbf24;
+  --gh-danger-fg:       #fb7185;
+  --gh-danger-subtle:   #4c0519;
+  --gh-hover-bg:        #1e293b;
+  --gh-hover-border:    #475569;
+  --gh-row-stripe:      #0b0f1766;
+  --panel-bg:           rgba(17, 24, 39, 0.7);
   color-scheme: dark;
 
   /* Type scale — bumped up at large/high-res viewports (see media query
@@ -54,41 +58,91 @@ html, body { margin: 0; height: 100%; }
 }
 
 :root[data-theme="light"] {
-  --gh-canvas-default:  #ffffff;
-  --gh-canvas-subtle:   #f6f8fa;
-  --gh-canvas-inset:    #eaeef2;
-  --gh-border-default:  #d0d7de;
-  --gh-border-muted:    #d8dee4;
-  --gh-fg-default:      #1f2328;
-  --gh-fg-muted:        #59636e;
-  --gh-fg-subtle:       #6e7781;
-  --gh-accent-fg:       #0969da;
-  --gh-accent-emphasis: #0969da;
-  --gh-accent-subtle:   #ddf4ff;
-  --gh-success-fg:      #1a7f37;
-  --gh-success-subtle:  #dafbe1;
-  --gh-attention-fg:    #9a6700;
-  --gh-danger-fg:       #d1242f;
-  --gh-danger-subtle:   #ffebe9;
-  --gh-hover-bg:        #eaeef2;
-  --gh-hover-border:    #8c959f;
-  --gh-row-stripe:      #eaeef280;
+  --gh-canvas-default:  #f1f5f9;
+  --gh-canvas-subtle:   #ffffff;
+  --gh-canvas-inset:    #f8fafc;
+  --gh-border-default:  #e2e8f0;
+  --gh-border-muted:    #e2e8f0;
+  --gh-fg-default:      #0f172a;
+  --gh-fg-muted:        #64748b;
+  --gh-fg-subtle:       #94a3b8;
+  --gh-accent-fg:       #4f46e5;
+  --gh-accent-emphasis: #4f46e5;
+  --gh-accent-subtle:   #eef2ff;
+  --gh-success-fg:      #059669;
+  --gh-success-subtle:  #d1fae5;
+  --gh-attention-fg:    #b45309;
+  --gh-danger-fg:       #e11d48;
+  --gh-danger-subtle:   #ffe4e6;
+  --gh-hover-bg:        #f1f5f9;
+  --gh-hover-border:    #94a3b8;
+  --gh-row-stripe:      #f1f5f980;
+  --panel-bg:           rgba(255, 255, 255, 0.85);
   color-scheme: light;
 }
 
+@theme inline {
+  --color-canvas: var(--gh-canvas-default);
+  --color-panel: var(--gh-canvas-subtle);
+  --color-inset: var(--gh-canvas-inset);
+  --color-line: var(--gh-border-default);
+  --color-fg: var(--gh-fg-default);
+  --color-muted: var(--gh-fg-muted);
+  --color-subtle: var(--gh-fg-subtle);
+  --color-brand: var(--gh-accent-emphasis);
+  --color-brand-fg: var(--gh-accent-fg);
+  --color-brand-soft: var(--gh-accent-subtle);
+  --color-ok: var(--gh-success-fg);
+  --color-warn: var(--gh-attention-fg);
+  --color-danger: var(--gh-danger-fg);
+  --color-hover: var(--gh-hover-bg);
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-deva: 'Noto Sans Devanagari', 'Mangal', sans-serif;
+}
+
+/* Frosted card used for every main-workspace panel. */
+.glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(156, 163, 175, 0.5); }
+
 /* ─── App shell ─────────────────────────────────────────────────────────── */
-/* Full-viewport layout on desktop; on narrow screens fall back to a normal
-   scrolling page with the two panels stacked. */
 .app-shell { overflow: hidden; }
 
-/* Invisible/inert on desktop — only shown behind the sidebar on narrow
-   screens (below), where the sidebar becomes a dismissible overlay. */
-.sidebar-backdrop { display: none; }
+/* Invisible/inert on wide screens — only shown behind a side panel when it
+   opens as an overlay (below). */
+.sidebar-backdrop, .assistant-backdrop { display: none; }
+
+/* The assistant panel sits inline on wide screens and slides in over the
+   workspace from the right below 1280px. */
+@media (max-width: 1279px) {
+  .assistant-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+  }
+  .assistant {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 100;
+    width: 85vw;
+    max-width: 320px;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+  }
+}
 
 @media (max-width: 860px) {
   .app-shell { height: auto; min-height: 100dvh; overflow: visible; }
-  .main-grid { grid-template-columns: 1fr !important; }
-  .panel-card { min-height: 60vh; }
 
   /* No room for a persistent sidebar column on narrow screens — it opens
      as a slide-in overlay (toggled the same way as on desktop) instead
@@ -108,9 +162,20 @@ html, body { margin: 0; height: 100%; }
     z-index: 100;
     width: 80vw;
     max-width: 300px;
-    border-radius: 0 !important;
-    border-left: none !important;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Document View's Print button prints just the document, not the app. */
+@media print {
+  body * { visibility: hidden; }
+  #document-print, #document-print * { visibility: visible; }
+  #document-print {
+    position: absolute;
+    inset: 0;
+    color: #000;
+    background: #fff;
+    border: none;
   }
 }
 

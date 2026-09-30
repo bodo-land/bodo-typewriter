@@ -40,7 +40,7 @@ export const s = {
     flexDirection: 'column',
     backgroundColor: GH.canvasDefault,
     color: GH.fgDefault,
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif",
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
     fontSize: 'var(--fs-16)',
     lineHeight: '1.5',
   } as React.CSSProperties,

@@ -1,15 +1,41 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { IMEState } from '../hooks/useBodoIME';
+import type { SuggestionSection } from '../utils/suggestions';
 import { transliterate } from '../engine/transliterator';
-import { GH, s } from '../styles/theme';
-import { Btn, CopyBtn, DownloadBtn } from './Btn';
-import { Key } from './Key';
-import { StatusDot } from './StatusDot';
+import { downloadTextFile } from '../utils/download';
+import { Btn, CopyBtn, ComingSoon } from './Btn';
 import { LineNumberedTextarea } from './LineNumberedTextarea';
-import { IcoTrash, IcoCheck, IcoSave, IcoX } from './icons';
+import {
+  IcoCheck, IcoSave, IcoSparkles, IcoClose, IcoArrowRight, IcoRotate,
+  IcoVolume, IcoDownload, IcoChevronDown,
+} from './icons';
 
 const TIP_DISMISSED_KEY = 'bodo-typewriter:tip-dismissed';
 const ENGLISH_INPUT_MAX = 5000;
+const DEVANAGARI_FONT = "'Noto Sans Devanagari', 'Mangal', sans-serif";
+
+function stats(text: string): string {
+  const chars = [...text].length;
+  const lines = text ? text.split('\n').length : 0;
+  return `${chars} characters • ${lines} line${lines === 1 ? '' : 's'}`;
+}
+
+function PanelHeader({ label, labelClass = 'text-muted', badge, children }: {
+  label: string;
+  labelClass?: string;
+  badge?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <span className={`text-xs font-semibold uppercase tracking-wider ${labelClass}`}>{label}</span>
+        {badge}
+      </div>
+      <div className="flex items-center gap-2">{children}</div>
+    </div>
+  );
+}
 
 export function EditorPanel({
   imeActive,
@@ -19,9 +45,11 @@ export function EditorPanel({
   englishParagraph,
   setParagraph,
   setEnglishParagraph,
-  onClear,
+  devanagariRef,
   onSave,
   justSaved,
+  suggestionSections,
+  onApplySuggestion,
 }: {
   imeActive: boolean;
   onToggleIme: () => void;
@@ -30,9 +58,12 @@ export function EditorPanel({
   englishParagraph: string;
   setParagraph: (value: string) => void;
   setEnglishParagraph: (value: string) => void;
-  onClear: () => void;
+  /** Lets the virtual keyboard insert at the Devanagari box's caret. */
+  devanagariRef: React.Ref<HTMLTextAreaElement>;
   onSave: () => void;
   justSaved: boolean;
+  suggestionSections: SuggestionSection[];
+  onApplySuggestion: (segmentIndex: number, english: string) => void;
 }) {
   const [plainEnglish, setPlainEnglish] = useState('');
   const [tipDismissed, setTipDismissed] = useState(() => {
@@ -61,58 +92,97 @@ export function EditorPanel({
     [ime, imeActive, onToggleIme],
   );
 
-  const handleClear = useCallback(() => {
-    onClear();
-    setPlainEnglish('');
-  }, [onClear]);
+  const clearInput = useCallback(() => {
+    if (imeActive) ime.reset();
+    else setPlainEnglish('');
+  }, [ime, imeActive]);
 
   const englishInputValue = imeActive ? ime.englishBuffer : plainEnglish;
-  const englishChars = [...englishParagraph].length;
-  const englishLines = englishParagraph ? englishParagraph.split('\n').length : 0;
-  const devaChars = [...paragraph].length;
-  const devaLines = paragraph ? paragraph.split('\n').length : 0;
+
+  // Every Did You Mean alternative (not the spelling already typed),
+  // flattened into one numbered candidate row.
+  const candidates = suggestionSections.flatMap(section =>
+    section.groups.flatMap(group =>
+      group.options
+        .filter(o => !o.isCurrent)
+        .map(o => ({ segmentIndex: section.segmentIndex, english: o.english, unicode: o.unicode })),
+    ),
+  );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0 }}>
-
+    <div className="mx-auto max-w-5xl space-y-5">
       {!tipDismissed && (
-        <div style={{
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '8px',
-          padding: '10px 12px',
-          borderRadius: '6px',
-          backgroundColor: GH.accentSubtle,
-          border: `1px solid ${GH.accentEmphasis}33`,
-          fontSize: 'var(--fs-13)',
-          color: GH.fgDefault,
-        }}>
-          <span style={{ flex: 1 }}>
-            <strong>Tip:</strong> type English below — each word you finish with Space/Enter
-            gets added to both "English paragraph" and "Devanagari paragraph" underneath.
-            Both boxes are freely editable on their own too.
-          </span>
-          <button
-            onClick={dismissTip}
-            aria-label="Dismiss tip"
-            title="Dismiss"
-            style={{
-              flexShrink: 0,
-              border: 'none',
-              background: 'none',
-              color: GH.fgMuted,
-              cursor: 'pointer',
-              padding: '2px',
-            }}
-          >
-            <IcoX />
+        <div className="glass-panel flex items-center justify-between gap-3 rounded-2xl border border-brand/20 p-3.5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-brand/20 p-2 text-brand-fg"><IcoSparkles size={20} /></div>
+            <div className="text-xs">
+              <p className="font-medium text-fg">Phonetic Bodo engine</p>
+              <p className="text-muted">
+                Type English phonetics (e.g. <span className="font-mono text-brand-fg">bwdw</span>,{' '}
+                <span className="font-mono text-brand-fg">khalamdwng</span>) and press Space or Enter to add
+                the word to both paragraphs below. Both paragraphs can also be edited directly.
+              </p>
+            </div>
+          </div>
+          <button type="button" onClick={dismissTip} aria-label="Dismiss tip" title="Dismiss" className="p-1 text-muted hover:text-fg">
+            <IcoClose />
           </button>
         </div>
       )}
 
-      <div style={{ flexShrink: 0 }}>
-        <span style={s.sectionLabel}>English input</span>
+      {/* Live composition buffer — the word being typed, its conversion, and
+          the Did You Mean alternatives as clickable candidates. */}
+      <div className="relative overflow-hidden rounded-xl border border-brand/30 bg-panel p-3 shadow-xl">
+        <div className="mb-2 flex items-center justify-between border-b border-line pb-2 text-xs">
+          <span className="flex items-center gap-2 font-medium text-fg/90">
+            <span className={`h-2 w-2 rounded-full ${imeActive && ime.englishBuffer ? 'animate-pulse bg-brand' : 'bg-subtle'}`} />
+            Live IME Composition Buffer
+          </span>
+          <span className="hidden font-mono text-[11px] text-muted sm:inline">Did You Mean candidates</span>
+        </div>
+        {!imeActive ? (
+          <p className="py-1 text-xs font-medium text-warn">
+            ⚠ IME off. Press F9 or the IME button in the header to turn transliteration back on.
+          </p>
+        ) : !ime.englishBuffer ? (
+          <p className="py-1 text-xs text-subtle">Start typing in the English input below…</p>
+        ) : (
+          <div className="flex items-center gap-3" style={{ animation: 'composing-fade-in 100ms ease-out' }}>
+            <div className="shrink-0 rounded border border-brand/40 bg-brand/10 px-2.5 py-1 font-mono text-sm font-semibold text-brand-fg">
+              {ime.englishBuffer}
+            </div>
+            <span className="shrink-0 text-subtle"><IcoArrowRight /></span>
+            <div className="flex items-center gap-2 overflow-x-auto py-0.5">
+              <span className="whitespace-nowrap rounded bg-brand px-3 py-1 font-deva text-sm font-medium text-white shadow">
+                1. {transliterate(ime.englishBuffer)}
+              </span>
+              {candidates.map((c, i) => (
+                <button
+                  key={`${c.segmentIndex}:${c.english}`}
+                  type="button"
+                  onClick={() => onApplySuggestion(c.segmentIndex, c.english)}
+                  title={`Use "${c.english}"`}
+                  className="whitespace-nowrap rounded bg-hover px-3 py-1 font-deva text-sm text-fg transition-colors hover:bg-brand hover:text-white"
+                >
+                  {i + 2}. {c.unicode}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* English input */}
+      <div className="glass-panel flex flex-col rounded-2xl border border-line p-4 shadow-lg">
+        <PanelHeader
+          label="English Input"
+          badge={<span className="rounded bg-hover px-2 py-0.5 font-mono text-[10px] text-muted">EN</span>}
+        >
+          <CopyBtn text={englishInputValue} />
+          <Btn variant="danger" onClick={clearInput} disabled={!englishInputValue} title="Clear the word being typed">
+            <IcoRotate size={14} /> Clear
+          </Btn>
+        </PanelHeader>
         <LineNumberedTextarea
           ref={imeActive ? ime.ref : undefined}
           minHeight="110px"
@@ -120,186 +190,127 @@ export function EditorPanel({
           onChange={e => { if (!imeActive) setPlainEnglish(e.target.value); }}
           onKeyDown={handleKeyDown}
           onPaste={imeActive ? ime.handlePaste : undefined}
-          placeholder={imeActive ? 'Type in English — e.g. bwdw → बोदो\nkhalam_dwng → खालामदों' : 'IME off — typing plain English (no transliteration)'}
+          placeholder={imeActive ? 'Type in English — e.g. bwdw → बोदो, khalamdwng → खालामदों' : 'IME off — typing plain English (no transliteration)'}
           spellCheck={false}
           maxLength={ENGLISH_INPUT_MAX}
           stats={`${englishInputValue.length} / ${ENGLISH_INPUT_MAX}`}
           aria-label="English transliteration input"
         />
-
-        {/* Composing hint */}
-        {imeActive && ime.englishBuffer && (
-          <div style={{
-            marginTop: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            backgroundColor: GH.accentSubtle,
-            border: `1px solid ${GH.accentEmphasis}33`,
-            animation: 'composing-fade-in 100ms ease-out',
-          }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              fontSize: 'var(--fs-11)',
-              fontWeight: 600,
-              color: GH.accentFg,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              flexShrink: 0,
-            }}>
-              <StatusDot active />
-              Composing
-            </span>
-
-            <Key k={ime.englishBuffer} />
-
-            <span style={{ color: GH.fgSubtle, fontSize: 'var(--fs-14)', flexShrink: 0 }}>→</span>
-
-            <span style={{
-              fontFamily: "'Noto Sans Devanagari', 'Mangal', serif",
-              fontSize: 'var(--fs-20)',
-              fontWeight: 500,
-              color: GH.fgDefault,
-              wordBreak: 'break-all',
-            }}>
-              {transliterate(ime.englishBuffer)}
-              <span style={{
-                display: 'inline-block',
-                width: '2px',
-                height: '1.1em',
-                marginLeft: '2px',
-                verticalAlign: 'text-bottom',
-                backgroundColor: GH.accentFg,
-                animation: 'composing-caret 1s step-end infinite',
-              }} />
-            </span>
-          </div>
-        )}
-
-        {!imeActive && (
-          <div style={{
-            marginTop: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: 'var(--fs-14)',
-            fontWeight: 600,
-            color: GH.attentionFg,
-          }}>
-            <span>⚠</span>
-            <span>IME off — press F9 or the keyboard button to re-enable transliteration</span>
-          </div>
-        )}
       </div>
 
-      {/* ── Divider ── */}
-      <div style={{ ...s.divider, flexShrink: 0 }} />
-
-      {/*
-        English paragraph — a plain, independent textarea just like the
-        Devanagari paragraph below: Backspace/typing here is native browser
-        behaviour and only ever touches THIS box. It's populated by
-        committed words' raw English form (via onCommit) but has no other
-        link back to English input — Backspace there can never reach text
-        that has landed here.
-      */}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
-          <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>English paragraph</span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <CopyBtn text={englishParagraph} />
-            <Btn
-              variant="danger"
-              onClick={handleClear}
-              disabled={!paragraph && !englishParagraph && !ime.englishBuffer}
-              title="Archive this session and clear both boxes"
-            >
-              <IcoTrash /> Clear
-            </Btn>
-            <DownloadBtn text={englishParagraph} filename="bodo-english.txt" title="Download as .txt" />
-          </div>
-        </div>
-
+      {/* English paragraph — committed words' raw English keystrokes. A plain,
+          independent textarea: editing here never touches the input above. */}
+      <div className="glass-panel flex flex-col rounded-2xl border border-line p-4 shadow-lg">
+        <PanelHeader label="English Paragraph">
+          <CopyBtn text={englishParagraph} />
+          <Btn onClick={() => downloadTextFile('bodo-english.txt', englishParagraph)} disabled={!englishParagraph} title="Download as .txt">
+            <IcoDownload />
+          </Btn>
+        </PanelHeader>
         <LineNumberedTextarea
-          flex={1}
+          minHeight="110px"
           value={englishParagraph}
           onChange={e => setEnglishParagraph(e.target.value)}
-          placeholder="Your raw English keystrokes accumulate here as you commit words (Space/Enter) — or type directly…"
+          placeholder="Your English keystrokes collect here as you commit words (Space/Enter), or type directly…"
           spellCheck={false}
-          stats={`${englishChars} chars • ${englishLines} line${englishLines === 1 ? '' : 's'}`}
+          stats={stats(englishParagraph)}
           aria-label="English paragraph output"
         />
       </div>
 
-      {/* ── Divider ── */}
-      <div style={{ ...s.divider, flexShrink: 0 }} />
-
-      {/* ── Output — flexes to fill all remaining height ── */}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
-          <span style={{ ...s.sectionLabel, marginBottom: 0, flex: 1 }}>Devanagari paragraph</span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <CopyBtn text={paragraph} />
-            <Btn
-              variant="danger"
-              onClick={handleClear}
-              disabled={!paragraph && !englishParagraph && !ime.englishBuffer}
-              title="Archive this session and clear both boxes"
-            >
-              <IcoTrash /> Clear
-            </Btn>
-            <DownloadBtn text={paragraph} filename="bodo-devanagari.txt" title="Download as .txt" />
-          </div>
-        </div>
-
-        {/*
-          A plain, independent textarea: Backspace/typing here is native
-          browser behaviour and only ever touches THIS box. It is populated
-          by committed words from English input (via onCommit) but has no
-          other link back to it — Backspace in English input can never reach
-          text that has landed here.
-        */}
+      {/* Devanagari output — also a plain, independent textarea. */}
+      <div className="glass-panel flex flex-col rounded-2xl border border-line p-4 shadow-lg">
+        <PanelHeader
+          label="Bodo Devanagari Output"
+          labelClass="text-ok"
+          badge={<span className="rounded border border-ok/20 bg-ok/10 px-2 py-0.5 font-deva text-[10px] text-ok">देव</span>}
+        >
+          <span className="flex items-center gap-1.5" title="Text-to-speech for Bodo coming soon">
+            <Btn disabled><IcoVolume size={14} /> Speak</Btn>
+            <ComingSoon className="hidden sm:inline-flex" />
+          </span>
+          <CopyBtn text={paragraph} label="Copy Bodo Text" variant="primary" />
+        </PanelHeader>
         <LineNumberedTextarea
-          flex={1}
+          ref={devanagariRef}
+          minHeight="160px"
           value={paragraph}
           onChange={e => setParagraph(e.target.value)}
-          placeholder="Output appears here as you commit words (Space/Enter) — or type directly…"
+          placeholder="Output appears here as you commit words (Space/Enter), or type directly…"
           spellCheck={false}
-          fontFamily="'Noto Sans Devanagari', 'Mangal', serif"
-          fontSize="var(--fs-24)"
+          fontFamily={DEVANAGARI_FONT}
+          fontSize="var(--fs-20)"
           lineHeight="1.8"
-          stats={`${devaChars} chars • ${devaLines} line${devaLines === 1 ? '' : 's'}`}
           aria-label="Devanagari paragraph output"
         />
-      </div>
 
-      {/* ── Save row ── */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: '10px',
-        flexShrink: 0,
-      }}>
-        <span style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          fontSize: 'var(--fs-13)',
-          color: GH.successFg,
-          opacity: justSaved ? 1 : 0,
-          transition: 'opacity 300ms',
-        }}>
-          <IcoCheck /> Saved
-        </span>
-        <Btn variant="primary" onClick={onSave} title="Save current session now">
-          <IcoSave /> Save Session
-        </Btn>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onSave}
+              title="Save current session now"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-2 text-xs font-medium text-white shadow-lg shadow-indigo-500/20 transition-all hover:brightness-110"
+            >
+              <IcoSave /> Save Session
+            </button>
+            <ExportMenu paragraph={paragraph} />
+            <span className={`flex items-center gap-1 text-xs text-ok transition-opacity duration-300 ${justSaved ? 'opacity-100' : 'opacity-0'}`}>
+              <IcoCheck /> Saved
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-[11px] text-subtle">
+            <span>{stats(paragraph)}</span>
+            <span className="rounded bg-hover px-2 py-0.5 text-muted">UTF-8</span>
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+/** Export dropdown — .txt is real; Word and PDF are placeholders for now. */
+function ExportMenu({ paragraph }: { paragraph: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        className="flex items-center gap-1.5 rounded-xl bg-hover px-3 py-2 text-xs font-medium text-fg transition-all hover:brightness-125"
+      >
+        <IcoDownload /> Export <IcoChevronDown size={12} />
+      </button>
+      {open && (
+        <div className="absolute bottom-full left-0 z-20 mb-1 w-48 rounded-xl border border-line bg-panel p-1 shadow-xl">
+          <button
+            type="button"
+            disabled={!paragraph}
+            onClick={() => { downloadTextFile('bodo-devanagari.txt', paragraph); setOpen(false); }}
+            className="w-full rounded-lg px-3 py-1.5 text-left text-xs text-fg hover:bg-hover disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Text (.txt)
+          </button>
+          <div className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs text-subtle" aria-disabled="true">
+            Word (.docx) <ComingSoon />
+          </div>
+          <div className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs text-subtle" aria-disabled="true">
+            PDF <ComingSoon />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

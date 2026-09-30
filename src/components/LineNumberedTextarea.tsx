@@ -42,9 +42,9 @@ export const LineNumberedTextarea = forwardRef<HTMLTextAreaElement, Props>(funct
         flex: flex ? 1 : undefined,
         minHeight: minHeight ?? 0,
         border: `1px solid ${GH.borderDefault}`,
-        borderRadius: '6px',
+        borderRadius: '12px',
         overflow: 'hidden',
-        backgroundColor: GH.canvasDefault,
+        backgroundColor: GH.canvasInset,
       }}>
         <div
           ref={gutterRef}
@@ -57,7 +57,7 @@ export const LineNumberedTextarea = forwardRef<HTMLTextAreaElement, Props>(funct
             fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace',
             fontSize,
             lineHeight,
-            backgroundColor: GH.canvasSubtle,
+            backgroundColor: 'transparent',
             borderRight: `1px solid ${GH.borderMuted}`,
             overflow: 'hidden',
             userSelect: 'none',

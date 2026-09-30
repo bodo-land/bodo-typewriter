@@ -67,3 +67,39 @@ export function IcoFlask() {
 export function IcoX() {
   return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>;
 }
+
+/* ── Outline icons (Lucide-style, 24-unit grid, stroke: currentColor) ── */
+
+function Outline({ size = 16, children }: { size?: number; children: React.ReactNode }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {children}
+    </svg>
+  );
+}
+
+type IcoProps = { size?: number };
+
+export const IcoPanelLeft = (p: IcoProps) => <Outline {...p}><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></Outline>;
+export const IcoPanelRight = (p: IcoProps) => <Outline {...p}><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M15 3v18" /></Outline>;
+export const IcoSparkles = (p: IcoProps) => <Outline {...p}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" /><path d="M19 3v4M17 5h4M5 17v4M3 19h4" /></Outline>;
+export const IcoLanguages = (p: IcoProps) => <Outline {...p}><path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6" /></Outline>;
+export const IcoFileText = (p: IcoProps) => <Outline {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></Outline>;
+export const IcoGrid = (p: IcoProps) => <Outline {...p}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></Outline>;
+export const IcoSliders = (p: IcoProps) => <Outline {...p}><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" /></Outline>;
+export const IcoSearch = (p: IcoProps) => <Outline {...p}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" /></Outline>;
+export const IcoClose = (p: IcoProps) => <Outline {...p}><path d="M18 6L6 18M6 6l12 12" /></Outline>;
+export const IcoVolume = (p: IcoProps) => <Outline {...p}><path d="M11 5L6 9H2v6h4l5 4z" /><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" /></Outline>;
+export const IcoChevronDown = (p: IcoProps) => <Outline {...p}><path d="M6 9l6 6 6-6" /></Outline>;
+export const IcoArrowRight = (p: IcoProps) => <Outline {...p}><path d="M5 12h14M12 5l7 7-7 7" /></Outline>;
+export const IcoLightbulb = (p: IcoProps) => <Outline {...p}><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z" /></Outline>;
+export const IcoWand = (p: IcoProps) => <Outline {...p}><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5" /></Outline>;
+export const IcoCheckCircle = (p: IcoProps) => <Outline {...p}><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></Outline>;
+export const IcoBookMarked = (p: IcoProps) => <Outline {...p}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" /><path d="M6.5 17A2.5 2.5 0 0 0 4 19.5 2.5 2.5 0 0 0 6.5 22H20v-5M10 2v8l3-3 3 3V2" /></Outline>;
+export const IcoHardDrive = (p: IcoProps) => <Outline {...p}><path d="M22 12H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11zM6 16h.01M10 16h.01" /></Outline>;
+export const IcoUser = (p: IcoProps) => <Outline {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></Outline>;
+export const IcoPrinter = (p: IcoProps) => <Outline {...p}><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></Outline>;
+export const IcoKeyboardOutline = (p: IcoProps) => <Outline {...p}><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10" /></Outline>;
+export const IcoSunOutline = (p: IcoProps) => <Outline {...p}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></Outline>;
+export const IcoMoonOutline = (p: IcoProps) => <Outline {...p}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" /></Outline>;
+export const IcoRotate = (p: IcoProps) => <Outline {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></Outline>;

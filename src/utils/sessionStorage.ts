@@ -130,3 +130,24 @@ export function mergeBackupIntoHistory(
 
   return { history: merged, importedCount: withFreshIds.length };
 }
+
+/**
+ * Approximate bytes this app holds in localStorage (every key under the
+ * "bodo-typewriter" prefix; JS strings are UTF-16, so 2 bytes per code unit).
+ */
+export function storageBytesUsed(): number {
+  let bytes = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith('bodo-typewriter')) continue;
+      bytes += (key.length + (localStorage.getItem(key)?.length ?? 0)) * 2;
+    }
+  } catch {
+    // localStorage unavailable — report nothing stored
+  }
+  return bytes;
+}
+
+/** Typical per-origin localStorage limit in current browsers. */
+export const STORAGE_QUOTA_BYTES = 5 * 1024 * 1024;

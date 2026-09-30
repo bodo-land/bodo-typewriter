@@ -1,7 +1,12 @@
 import { useState } from 'react';
-import { GH, s } from '../styles/theme';
 import { IcoCheck, IcoCopy, IcoDownload } from './icons';
 import { downloadTextFile } from '../utils/download';
+
+const VARIANTS = {
+  primary:   'bg-brand text-white shadow hover:brightness-110',
+  secondary: 'bg-hover text-fg hover:brightness-125',
+  danger:    'bg-hover text-fg hover:bg-danger/15 hover:text-danger',
+} as const;
 
 export function Btn({
   variant = 'secondary',
@@ -10,41 +15,25 @@ export function Btn({
   disabled,
   title,
   ariaLabel,
+  className = '',
 }: {
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: keyof typeof VARIANTS;
   onClick?: () => void;
   children: React.ReactNode;
   disabled?: boolean;
   title?: string;
   /** Accessible name for icon-only buttons (falls back to `title` if omitted). */
   ariaLabel?: string;
+  className?: string;
 }) {
-  const [hover, setHover] = useState(false);
-
-  const base = variant === 'primary' ? s.btnPrimary
-             : variant === 'danger'  ? s.btnDanger
-             :                         s.btnSecondary;
-
-  const hoverOverride: Record<string, React.CSSProperties> = {
-    primary:   { backgroundColor: GH.accentFg },
-    secondary: { backgroundColor: GH.hoverBg, border: `1px solid ${GH.hoverBorder}` },
-    danger:    { backgroundColor: GH.dangerSubtle, border: `1px solid ${GH.dangerFg}` },
-  };
-
   return (
     <button
-      style={{
-        ...base,
-        ...(hover && !disabled ? hoverOverride[variant] : {}),
-        opacity: disabled ? 0.4 : 1,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        transition: 'background-color 80ms, border-color 80ms',
-      }}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      type="button"
       onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       title={title}
       aria-label={ariaLabel ?? title}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:brightness-100 ${VARIANTS[variant]} ${className}`}
     >
       {children}
     </button>
@@ -52,7 +41,7 @@ export function Btn({
 }
 
 /** A Btn that copies `text` to the clipboard and flashes "Copied!" briefly. */
-export function CopyBtn({ text, label = 'Copy' }: { text: string; label?: string }) {
+export function CopyBtn({ text, label = 'Copy', variant = 'secondary' }: { text: string; label?: string; variant?: keyof typeof VARIANTS }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -63,7 +52,7 @@ export function CopyBtn({ text, label = 'Copy' }: { text: string; label?: string
   };
 
   return (
-    <Btn variant="secondary" onClick={handleCopy} disabled={!text}>
+    <Btn variant={variant} onClick={handleCopy} disabled={!text}>
       {copied ? <IcoCheck /> : <IcoCopy />}
       {copied ? 'Copied!' : label}
     </Btn>
@@ -76,5 +65,14 @@ export function DownloadBtn({ text, filename, title }: { text: string; filename:
     <Btn variant="secondary" onClick={() => downloadTextFile(filename, text)} disabled={!text} title={title}>
       <IcoDownload />
     </Btn>
+  );
+}
+
+/** Small "Coming soon" tag for parts of the layout that aren't built yet. */
+export function ComingSoon({ className = '' }: { className?: string }) {
+  return (
+    <span className={`inline-flex items-center whitespace-nowrap rounded-full border border-warn/30 bg-warn/10 px-2 py-0.5 text-[10px] font-medium text-warn ${className}`}>
+      Coming soon
+    </span>
   );
 }
