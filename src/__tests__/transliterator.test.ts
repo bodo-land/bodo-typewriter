@@ -159,6 +159,31 @@ describe('consonant clusters', () => {
     expect(transliterate('khwn')).toBe('खोन'));
 });
 
+// ── '-Cwng' exception: no halant after a closed syllable ─────────────────────
+
+describe("'-Cwng' after a closed syllable (no halant)", () => {
+  it('khalamdwng → खालामदों (म closes a syllable, द + wng)', () =>
+    expect(transliterate('khalamdwng')).toBe('खालामदों'));
+
+  it('khalamdwM → खालामदों (M works like ng)', () =>
+    expect(transliterate('khalamdwM')).toBe('खालामदों'));
+
+  it('khalamodwng → खालामदों (explicit o still works)', () =>
+    expect(transliterate('khalamodwng')).toBe('खालामदों'));
+
+  it('mdwng → म्दों (word-initial cluster keeps halant)', () =>
+    expect(transliterate('mdwng')).toBe('म्दों'));
+
+  it('brwng → ब्रों (word-initial cluster keeps halant)', () =>
+    expect(transliterate('brwng')).toBe('ब्रों'));
+
+  it('khalamdw → खालाम्दो (no ng after w: halant kept)', () =>
+    expect(transliterate('khalamdw')).toBe('खालाम्दो'));
+
+  it('khalamstwng → खालाम्स्तों (three-consonant run: halant kept)', () =>
+    expect(transliterate('khalamstwng')).toBe('खालाम्स्तों'));
+});
+
 // ── Special / symbol mappings ─────────────────────────────────────────────────
 
 describe('special mappings', () => {

@@ -21,6 +21,12 @@
  * When a consonant immediately follows another consonant (no vowel between),
  * U+094D HALANT (virama) is inserted so the pair forms a conjunct.
  *
+ * Exception — '-Cwng' after a closed syllable: when the previous consonant
+ * came straight after a vowel (it closes a syllable, like म in खालाम) and
+ * the new consonant is followed by 'w' + 'ng'/'M', no halant is inserted.
+ *   khalamdwng → खालामदों   (not खालाम्दों)
+ *   brwng      → ब्रों      (word-initial cluster, rule doesn't apply)
+ *
  * 'ng' special rule  (DOCUMENTED)
  * --------------------------------
  * 'ng' / 'M' after any content → anusvara ं.
@@ -72,6 +78,9 @@ export function transliterate(input: string): string {
   const tokens = tokenize(input);
   let out = '';
   let state: State = 'initial';
+  // True while the current consonant run is exactly one consonant long and
+  // that consonant came straight after a vowel (see '-Cwng' exception).
+  let singleConsonantAfterVowel = false;
   let i = 0;
 
   while (i < tokens.length) {
@@ -113,7 +122,12 @@ export function transliterate(input: string): string {
     // ── Consonant ─────────────────────────────────────────────────────────
     if (isConsonantToken(token)) {
       const cChar = consonantCharFor(token.raw);
-      out += state === 'after_consonant' ? U.HALANT + cChar : cChar;
+      const skipHalant =
+        singleConsonantAfterVowel &&
+        tokens[i + 1]?.raw === 'w' &&
+        (tokens[i + 2]?.raw === 'ng' || tokens[i + 2]?.raw === 'M');
+      out += state === 'after_consonant' && !skipHalant ? U.HALANT + cChar : cChar;
+      singleConsonantAfterVowel = state === 'after_vowel';
       state = 'after_consonant';
       i++;
       continue;

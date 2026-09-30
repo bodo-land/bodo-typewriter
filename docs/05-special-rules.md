@@ -184,6 +184,22 @@ k + (space) + h  →  ख + space + ह
 Within the same word, a `-` or another passthrough character can serve as
 a separator without adding visible content.
 
+### Exception: '-Cwng' After a Closed Syllable
+
+No halant is inserted when **both** of these hold:
+
+1. The previous consonant came straight after a vowel, so it closes a
+   syllable (म in खालाम), and
+2. The new consonant is followed by `w` + `ng` (or `w` + `M`).
+
+```
+khalamdwng   →  खालामदों    (not खालाम्दों)
+mdwng        →  म्दों       (word-initial cluster: rule doesn't apply)
+brwng        →  ब्रों       (word-initial cluster: rule doesn't apply)
+khalamdw     →  खालाम्दो    (no ng after w: halant kept)
+khalamstwng  →  खालाम्स्तों  (run of three consonants: halant kept)
+```
+
 ---
 
 ## 5.4 Case Sensitivity
