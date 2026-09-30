@@ -45,7 +45,7 @@ export const VOWEL_MAPPINGS: Record<string, VowelEntry> = {
   'ou':  { standalone: U.AU,  matra: U.M_AU,  source: 'documented' }, // औ / ौ
   'wo':  { standalone: U.AU,  matra: U.M_AU,  source: 'documented' }, // औ / ौ
   'wi':  { standalone: U.AI,  matra: U.M_AI,  source: 'documented' }, // ऐ / ै
-  'ai':  { standalone: U.AI,  matra: U.M_AI,  source: 'documented' }, // ऐ / ै
+  // 'ai':  { standalone: U.AI,  matra: U.M_AI,  source: 'documented' }, // ऐ / ै
   'ee':  { standalone: U.II,  matra: U.M_II,  source: 'inferred'   }, // ई / ी
   'Ri':  { standalone: U.RI,  matra: U.M_RI,  source: 'inferred'   }, // ऋ / ृ
   'RI':  { standalone: U.RII, matra: U.M_RII, source: 'inferred'   }, // ॠ / ॄ
